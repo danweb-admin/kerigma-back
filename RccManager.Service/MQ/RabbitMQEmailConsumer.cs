@@ -146,8 +146,8 @@ namespace RccManager.Service.MQ
                     throw new InvalidOperationException("Variáveis de ambiente SMTP não configuradas corretamente");
                 }
 
-                var nomeOrganizacao = "Paróquia Nossa Senhora Auxiliadora";
-                var logoUrl = "https://res.cloudinary.com/dgcpvxvcj/image/upload/v1774405275/Fotos%20Eventos/auxiliadora.png";
+                var nomeOrganizacao = "Kerigma Eventos";
+                var logoUrl = "https://res.cloudinary.com/dgcpvxvcj/image/upload/v1774819269/Fotos%20Eventos/Logo_Kerigma_Eventos.png";
 
                 string templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", "email-confirmacao.html");
                 

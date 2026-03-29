@@ -44,5 +44,5 @@ jobs:
         context: .
         push: true
         tags: |
-          williambr2022/auxiliadora-back:latest
-          williambr2022/auxiliadora-back:${{ github.sha }}
+          williambr2022/kerigma-back:latest
+          williambr2022/kerigma-back:${{ github.sha }}

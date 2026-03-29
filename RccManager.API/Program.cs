@@ -55,9 +55,9 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "https://eventos.rcc-londrina.online",
-                "https://checkin.auxiliadoraonline.com.br",
-                "http://gerenciador.rcc-londrina.online",
+                "https://www.kerigma-eventos.online",
+                "https://checkin.kerigma-eventos.online",
+                "http://gerenciador.kerigma-eventos.online",
                 "https://gerenciador.auxiliadoraonline.com.br",
                 "http://localhost:4200",
                 "https://eventos.auxiliadoraonline.com.br",

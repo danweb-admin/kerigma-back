@@ -17,6 +17,9 @@ using RccManager.Domain.Interfaces.Services;
 using RccManager.Service.Services;
 using RccManager.Service.Hubs;
 using Microsoft.Extensions.FileProviders;
+using System;
+using Hangfire;
+using RccManager.API.Filter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,11 +27,18 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 
 var redisHost = Environment.GetEnvironmentVariable("RedisHost");
 var redisPort = Environment.GetEnvironmentVariable("RedisPort");
+var apiKeyEvolutionAPI = Environment.GetEnvironmentVariable("ApiKeyEvolutionApi");
 
 builder.Services.AddStackExchangeRedisCache(o =>
 {
     o.InstanceName = "instance";
     o.Configuration = $"{redisHost}:{redisPort}";
+});
+
+builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
+{
+    client.BaseAddress = new Uri("https://evolutionapi.kerigma-eventos.online");
+    client.DefaultRequestHeaders.Add("apikey", $"{apiKeyEvolutionAPI}");
 });
 
 builder.Services.AddControllers()
@@ -80,6 +90,42 @@ ConfigureService.ConfigureDependenciesService(builder.Services);
 ConfigureRepository.ConfigureDependenciesRepository(builder.Services);
 ConfigureAppDbContext(builder);
 
+void ConfigureAppDbContext(WebApplicationBuilder builder)
+{
+    var server = Environment.GetEnvironmentVariable("DbServer");
+    var port = Environment.GetEnvironmentVariable("DbPort");
+    var user = Environment.GetEnvironmentVariable("DbUser");
+    var password = Environment.GetEnvironmentVariable("Password");
+    var database = Environment.GetEnvironmentVariable("Database");
+    var development = Environment.GetEnvironmentVariable("Development");
+
+    var connectionString = string.Empty;
+
+    if (development == "True")
+        connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=SolucaoDB;";
+    else
+        connectionString =
+            $"Server={server}, {port};Initial Catalog={database};User ID={user};Password={password}";
+
+    builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseSqlServer(connectionString);
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors(false);
+        options.EnableSensitiveDataLogging(false);
+        options.ConfigureWarnings(w =>
+            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.CommandExecuted));
+    });
+}
+
+var connectionString = GetConnectionString();
+
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(connectionString)
+);
+
+builder.Services.AddHangfireServer();
+
 // AutoMapper
 var config = new MapperConfiguration(cfg =>
 {
@@ -120,6 +166,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<EmailQueueProducer>();
+builder.Services.AddSingleton<WhatsAppProducer>();
+
 
 var UrlAsaas = Environment.GetEnvironmentVariable("UrlAsaas");
 var AccessToken = Environment.GetEnvironmentVariable("AccessToken");
@@ -133,6 +181,8 @@ builder.Services.AddHttpClient("asaas", (sp, client) =>
 
 // Background service
 builder.Services.AddHostedService<RabbitMQEmailConsumer>();
+builder.Services.AddHostedService<WhatsAppConsumer>();
+
 
 builder.Services.AddScoped<IAsaasClient, AsaasClient>();
 builder.Services.AddScoped<IPagamentoAsaasService, PagamentoAsaasService>();
@@ -161,6 +211,11 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseRouting();
 
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
+
 app.UseCors("AppCors");
 
 app.UseAuthentication();
@@ -177,14 +232,23 @@ app.Use(async (context, next) =>
 app.MapControllers();
 app.MapHub<CheckinHub>("/hub/checkin");
 
+RecurringJob.AddOrUpdate<IEventoService>(
+    "verificar-inscricoes-pendentes",
+    x => x.VerificaInscricoesPendentes(),
+    Cron.HourInterval(1)
+);
+
+RecurringJob.AddOrUpdate<IGrupoOracaoService>(
+    "import-csv",
+    x => x.ImportCSV(),
+    Cron.Daily(4)
+);
+
 app.Run();
 
 
-// ----------------------------------------------
-//       ConfigureAppDbContext
-// ----------------------------------------------
 
-void ConfigureAppDbContext(WebApplicationBuilder builder)
+string GetConnectionString()
 {
     var server = Environment.GetEnvironmentVariable("DbServer");
     var port = Environment.GetEnvironmentVariable("DbPort");
@@ -193,21 +257,10 @@ void ConfigureAppDbContext(WebApplicationBuilder builder)
     var database = Environment.GetEnvironmentVariable("Database");
     var development = Environment.GetEnvironmentVariable("Development");
 
-    var connectionString = string.Empty;
-
     if (development == "True")
-        connectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=SolucaoDB;";
-    else
-        connectionString =
-            $"Server={server}, {port};Initial Catalog={database};User ID={user};Password={password}";
+        return @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=SolucaoDB;";
 
-    builder.Services.AddDbContext<AppDbContext>(options =>
-    {
-        options.UseSqlServer(connectionString);
-        options.EnableSensitiveDataLogging();
-        options.EnableDetailedErrors(false);
-        options.EnableSensitiveDataLogging(false);
-        options.ConfigureWarnings(w =>
-            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.CommandExecuted));
-    });
+    return $"Server={server},{port};Initial Catalog={database};User ID={user};Password={password}";
 }
+
+

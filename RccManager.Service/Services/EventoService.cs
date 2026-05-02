@@ -1,18 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Drawing;
 using System.Net;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using AutoMapper;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RccManager.Domain.Dtos.Evento;
 using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Interfaces.Services;
 using RccManager.Domain.Responses;
+using RccManager.Service.Helper;
 using RccManager.Service.Hubs;
 using RccManager.Service.MQ;
 using static QRCoder.PayloadGenerator;
@@ -32,10 +37,12 @@ namespace RccManager.Domain.Services
         private readonly EmailQueueProducer _producer;
         private readonly IHubContext<CheckinHub> _hub;
         private readonly IEmailService _emailService;
+        private readonly WhatsAppProducer _whatsAppProducer;
+
         private readonly IMapper _mapper;
 
 
-        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository)
+        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer)
         {
             _eventoRepository = eventoRepository;
             _inscricaoRepository = inscricaoRepository;
@@ -49,6 +56,7 @@ namespace RccManager.Domain.Services
             _eventoUsuariosRepository = eventoUsuariosRepository;
             _emailService = emailService;
             _servoRepository = servoRepository;
+            _whatsAppProducer = whatsAppProducer;
         }
 
         public async Task<HttpResponse> Create(EventoDto dto, Guid userId)
@@ -148,6 +156,9 @@ namespace RccManager.Domain.Services
         public async Task<string> VerificaStatus(string codigoInscricao)
         {
             var inscricao = await _inscricaoRepository.GetByInscricao(codigoInscricao);
+
+            if (inscricao == null)
+                return "PENDENTE";
 
             if (inscricao.Status == "pagamento_confirmado")
                 return "PAGO";
@@ -408,9 +419,11 @@ namespace RccManager.Domain.Services
 
             inscricaoMQ.Email = email;
 
-            await _emailService.EnviarEmailPagamentoConfirmado(inscricaoMQ);
+            //await _emailService.EnviarEmailPagamentoConfirmado(inscricaoMQ);
 
             await _producer.PublishEmail(inscricaoMQ);
+
+            await _whatsAppProducer.PublishWhatsAppMessage(inscricaoMQ);
 
             return ValidationResult.Success;
         }
@@ -432,6 +445,9 @@ namespace RccManager.Domain.Services
                 throw new WebException("Houve um problema para isentar a Inscrição!");
 
             await _producer.PublishEmail(inscricaoMQ);
+
+            await _whatsAppProducer.PublishWhatsAppMessage(inscricaoMQ);
+
 
             return ValidationResult.Success;
         }
@@ -466,6 +482,9 @@ namespace RccManager.Domain.Services
             if (inscricao == null)
                 throw new WebException("Inscrição não encontrado!");
 
+            if (inscricao.CheckIn.HasValue)
+                throw new WebException("Esse QR Code já foi utilizado!");
+
             inscricao.CheckIn = true;
             inscricao.DataCheckIn = DateTime.Now;
 
@@ -482,23 +501,35 @@ namespace RccManager.Domain.Services
 
         }
 
-        public async Task<bool> VerificaLimiteParticipante(Guid eventoId)
+        public async Task VerificaInscricoesPendentes()
         {
-            var evento = await _eventoRepository.GetById(eventoId);
-            var participantesConfirmados = await _eventoRepository.GetLimiteParticipantes(eventoId);
+            Console.WriteLine("******** INICIO - VerificaInscricoesPendentes() ********");
+            var dataBase = DateTime.Now.AddDays(-1);
 
-            if (evento.LimiteParticipantes == 0 )
-                return true;
+            Console.WriteLine("DataBase: " + dataBase.ToString("dd/MM/yyyy HH:mm:ss"));
 
-            if (participantesConfirmados >= evento.LimiteParticipantes)
+
+            var  pendentes = await _inscricaoRepository.GetAllPending(dataBase);
+
+            if (pendentes.Any())
             {
-                evento.Status = "Encerradas";
-                await _eventoRepository.Update(evento);
-
-                return false;
-            }
+                Console.WriteLine($"******** {pendentes.Count()} INSCRICOES ENCONTRADAS ********");
+                foreach (var item in pendentes)
+                {
+                    Console.WriteLine($"Inscricao: {item.CodigoInscricao}, Nome: {item.Nome}, Email: {item.Email}, Valor: {item.ValorInscricao}");
+                }
                 
-            return true;
+                
+            }else
+            {
+                Console.WriteLine("******** NENHUMA INSCRICAO PENDENTE ********");
+            }
+
+
+
+            
+            Console.WriteLine("******** FIM - VerificaInscricoesPendentes() ********");
+            await Task.CompletedTask;
         }
 
         //  WEBHOOK
@@ -558,8 +589,8 @@ namespace RccManager.Domain.Services
                     return new ValidationResult("❌ Erro no processamento do webhook.");
 
                 // Se já estava paga, ignore
-                //if (inscricao.Status == "pagamento_confirmado")
-                //    return ValidationResult.Success;
+                if (inscricao.Status == "pagamento_confirmado")
+                    return ValidationResult.Success;
 
                 var charge = webhookResponse.Charges.First();
 
@@ -581,7 +612,66 @@ namespace RccManager.Domain.Services
 
             await _producer.PublishEmail(inscricaoMQ);
 
+            await _whatsAppProducer.PublishWhatsAppMessage(inscricaoMQ);
+
+
+            var limiteParticipantesEvento = inscricao.Evento.LimiteParticipantes;
+            var participantesConfirmados = await _eventoRepository.GetLimiteParticipantes(inscricao.EventoId);
+
+            Console.WriteLine($"EVENTO: {inscricao.Evento.Nome}");
+            Console.WriteLine($"LIMITE PARTICIPANTES: {limiteParticipantesEvento}");
+            Console.WriteLine($"PARTICIPANTES CONFIRMADOS: {participantesConfirmados}");
+
+
             return ValidationResult.Success;
+        }
+
+        public async Task<bool> VerificaLimiteParticipante(Guid eventoId)
+        {
+            var evento = await _eventoRepository.GetById(eventoId);
+            var participantesConfirmados = await _eventoRepository.GetLimiteParticipantes(eventoId);
+
+            if (evento.LimiteParticipantes == 0 )
+                return true;
+
+            if (participantesConfirmados >= evento.LimiteParticipantes)
+            {
+                evento.Status = "Encerradas";
+                await _eventoRepository.Update(evento);
+
+                return false;
+            }
+                
+
+            return true;
+        }
+
+        public async Task GerarQrCodePNG(Guid eventoId)
+        {
+            var inscricoes = await _inscricaoRepository.GetAll(eventoId);
+
+            foreach (var inscricao in inscricoes)
+            {
+                Utils.GerarQrCodePNG(inscricao.CodigoInscricao);
+            }
+
+
+        }
+
+        public async Task<DataTable> ExportarInscricoes(Guid eventoId)
+        {
+            return await _eventoRepository.ExportarInscricoes(eventoId);
+        }
+
+        public byte[] GerarExcel(DataTable tabela)
+        {
+            using var workbook = new XLWorkbook();
+            workbook.Worksheets.Add(tabela, "Inscricoes");
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+
+            return stream.ToArray();
         }
 
         private bool EmailValido(string email)
@@ -788,7 +878,8 @@ namespace RccManager.Domain.Services
                 ValorInscricao = inscricao.ValorInscricao,
                 OrganizadorNome = inscricao.Evento.OrganizadorNome,
                 Local = formatarLocal(inscricao.Evento.Local),
-                Status = inscricao.Status
+                Status = inscricao.Status,
+                Telefone = inscricao.Telefone
             };
 
             return retorno;

@@ -12,7 +12,7 @@ namespace RccManager.API.Controllers
 {
     [ApiController]
     [Route("api/v1/eventos")]
-    [Authorize] 
+    [Authorize]
     public class EventosController : ControllerBase
     {
         private readonly IEventoService _eventoService;
@@ -277,6 +277,7 @@ namespace RccManager.API.Controllers
         }
 
         [HttpGet("verifica-limite-participantes")]
+        [AllowAnonymous]
         public async Task<IActionResult> VerificaLimiteParticipantes([FromQuery] Guid eventoId)
         {
             try
@@ -297,6 +298,7 @@ namespace RccManager.API.Controllers
 
         }
 
+
         [HttpGet("remover-inscricao")]
         public async Task<IActionResult> RemoverInscricao([FromQuery] string codigoInscricao)
         {
@@ -315,9 +317,43 @@ namespace RccManager.API.Controllers
 
                 return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
             }
+        }
+
+        [HttpGet("gerar-qrcode-png")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GerarQrCodePNG([FromQuery] Guid eventoId)
+        {
+            try
+            {
+                await _eventoService.GerarQrCodePNG(eventoId);
+
+                return Ok();
+            }
+            catch (ValidateByNameException ex)
+            {
+                return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
+            }
+            catch (WebException ex)
+            {
+
+                return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
+            }
 
         }
 
+        [HttpGet("exportar-inscricoes/{eventoId}")]
+        public async Task<IActionResult> Exportar(Guid eventoId)
+        {
+            var tabela = await _eventoService.ExportarInscricoes(eventoId);
+
+            var excel = _eventoService.GerarExcel(tabela);
+
+            return File(
+                excel,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"inscricoes_{eventoId}.xlsx"
+            );
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(Guid id, [FromBody] EventoDto eventoViewModel)

@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using RccManager.Domain.Dtos.Evento;
@@ -10,6 +11,7 @@ using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Interfaces.Services;
 using RccManager.Domain.Responses;
+using RccManager.Service.Helper;
 
 namespace RccManager.Service.Services
 {
@@ -46,13 +48,13 @@ namespace RccManager.Service.Services
                 {
                     name = inscricao.Nome,
                     email = inscricao.Email,
-                    tax_id = inscricao.Cpf.Replace(".","").Replace("-",""), 
+                    tax_id = Utils.SomenteNumeros( inscricao.Cpf), 
                     phones = new[]
                         {
                             new {
                                 country = "55",
-                                area = inscricao.Telefone.Replace("(","").Replace(")","").Replace("-","").Replace(" ","").Substring(0, 2),
-                                number = inscricao.Telefone.Replace("(","").Replace(")","").Replace("-","").Replace(" ","").Substring(2),
+                                area = Utils.SomenteNumeros(inscricao.Telefone).Substring(0, 2),
+                                number = Utils.SomenteNumeros(inscricao.Telefone).Substring(2),
                                 type = "MOBILE"
                             }
                         }       
@@ -82,6 +84,13 @@ namespace RccManager.Service.Services
             };
 
             Console.WriteLine("request: " + body.ToString());
+            var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            Console.WriteLine("JSON: " + json);
+
 
             var response = await http.PostAsJsonAsync($"{url}/orders", body);
 

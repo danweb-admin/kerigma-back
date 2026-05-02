@@ -42,6 +42,11 @@ namespace RccManager.Infra.Repositories
             return await dbSet.Where(x => x.EventoId == eventoId).ToListAsync();
         }
 
+        public async Task<IEnumerable<Inscricao>> GetAllPending(DateTime dataBase)
+        {
+            return await dbSet.Where(x => x.CreatedAt <= dataBase && x.Status == "pendente").ToListAsync();
+        }
+
         public async Task<Inscricao> GetByCodigo(string codigoInscricao)
         {
             return await dbSet.Include(x => x.Evento)

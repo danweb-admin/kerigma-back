@@ -119,10 +119,13 @@ namespace RccManager.Service.Services
             if (exists)
                 throw new ValidateByCpfOrEmailException("Este CPF já está sendo utilizado.");
 
-            
-
             var servo_ = _mapper.Map<Servo>(servo);
             servo_.Id = id;
+
+            servo_.CellphonePlain = Utils.SomenteNumeros(servo.CellPhone);
+            servo_.CpfPlain = Utils.SomenteNumeros(servo.Cpf);
+            servo_.EmailPlain = servo.Email;
+            servo_.NamePlain = servo.Name;
 
             var result = await _repository.Update(servo_);
 

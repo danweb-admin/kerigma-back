@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using RccManager.Domain.Entities;
 
@@ -18,7 +19,6 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<IEnumerable<Inscricao>> GetAllInscricoesByEvento(Guid eventoId);
         Task<IEnumerable<EventoCampos>> GetCamposByEvento(Guid eventoId);
         Task<int> GetLimiteParticipantes(Guid eventoId);
-
-
+        Task<DataTable> ExportarInscricoes(Guid eventoId);
     }
 }

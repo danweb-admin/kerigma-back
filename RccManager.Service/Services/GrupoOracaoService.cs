@@ -24,15 +24,17 @@ namespace RccManager.Service.Services
         private readonly IMapper mapper;
         private readonly IGrupoOracaoRepository repository;
         private readonly IServoTempRepository servoTempRepository;
+        private readonly IUserRepository userRepository;
 
         private readonly IHistoryRepository history;
 
-        public GrupoOracaoService(IMapper _mapper, IGrupoOracaoRepository _repository, IHistoryRepository _history, IServoTempRepository _servoTempRepository)
+        public GrupoOracaoService(IMapper _mapper, IGrupoOracaoRepository _repository, IHistoryRepository _history, IServoTempRepository _servoTempRepository, IUserRepository _userRepository)
         {
             mapper = _mapper;
             repository = _repository;
             servoTempRepository = _servoTempRepository;
             history = _history;
+            userRepository = _userRepository;
         }
 
         public async Task<HttpResponse> Create(GrupoOracaoDto grupoOracao)
@@ -262,7 +264,7 @@ namespace RccManager.Service.Services
                             catch (Exception ex)
                             {
                                 Console.WriteLine($"Servo: {name}, GrupoOracao: {grupoOracao}, Decanato: {decanato}");
-                                Console.WriteLine(ex.Message);
+                                //Console.WriteLine(ex.Message);
                             }
                             
                             
@@ -274,6 +276,25 @@ namespace RccManager.Service.Services
 
        
             return new HttpResponse { Message = "Servos Temporário importado com sucesso.", StatusCode = (int)HttpStatusCode.OK };
+        }
+
+        public async Task<HttpResponse> ImportCSV()
+        {
+            try
+            {
+                var user = await userRepository.GetByEmail("admin@admin.com");
+                var user_ = mapper.Map<UserDtoResult>(user);
+
+                await ImportCSV(user_);
+
+                return new HttpResponse { Message = "Servos Temporário importado com sucesso.", StatusCode = (int)HttpStatusCode.OK };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            } 
+ 
         }
 
         public async Task<HttpResponse> Update(GrupoOracaoDto grupoOracao, Guid id)

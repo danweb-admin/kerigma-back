@@ -20,6 +20,9 @@ namespace RccManager.Domain.Interfaces.Services
 
         Task<HttpResponse> ImportCSV(UserDtoResult user);
 
+        Task<HttpResponse> ImportCSV();
+
+
     }
 }
 

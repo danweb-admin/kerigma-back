@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -168,6 +169,35 @@ namespace RccManager.Infra.Repositories
                 Where(x => list.Contains(x.Status) && x.EventoId == eventoId).CountAsync();
              
                
+        }
+
+        public async Task<DataTable> ExportarInscricoes(Guid eventoId)
+        {
+            var conn = context.Database.GetDbConnection();
+
+            var dt = new DataTable();
+
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "sp_ExportarInscricoesEvento";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                var param = cmd.CreateParameter();
+                param.ParameterName = "@EventoId";
+                param.Value = eventoId;
+
+                cmd.Parameters.Add(param);
+
+                if (conn.State != ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    dt.Load(reader);
+                }
+            }
+
+            return dt;
         }
     }
 }

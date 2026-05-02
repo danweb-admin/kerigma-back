@@ -40,5 +40,6 @@
     <PackageReference Include="StackExchange.Redis" Version="2.6.80" />
     <PackageReference Include="CsvHelper" Version="33.0.0" />
     <PackageReference Include="QRCoder" Version="1.7.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
   </ItemGroup>
 </Project>

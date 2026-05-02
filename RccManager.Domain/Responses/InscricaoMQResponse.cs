@@ -7,6 +7,7 @@ namespace RccManager.Domain.Responses
         public string Nome { get; set; }
         public string Cpf { get; set; }
         public string Email { get; set; }
+        public string Telefone { get; set; }
         public decimal ValorInscricao { get; set; }
         public string NomeEvento { get; set; }
         public DateTime DataInicio { get; set; }

@@ -33,7 +33,7 @@ namespace RccManager.Service.MQ
                     
                     _channel = await _rmq.CreateChannelAsync();
 
-                    Console.WriteLine("✅ Conectado ao RabbitMQ com sucesso!");
+                    Console.WriteLine("✅ Conectado ao RabbitMQ - Email com sucesso!");
 
                     await _channel.QueueDeclareAsync(
                         queue: "email_queue",
@@ -110,7 +110,7 @@ namespace RccManager.Service.MQ
                     // Aguardar antes de tentar reconectar
                     if (!stoppingToken.IsCancellationRequested)
                     {
-                        Console.WriteLine("⏳ Aguardando 55 segundos antes de reconectar...");
+                        Console.WriteLine("⏳ Aguardando 5 segundos antes de reconectar - Email...");
                         await Task.Delay(5000, stoppingToken);
                     }
                 }

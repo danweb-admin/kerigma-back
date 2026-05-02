@@ -11,6 +11,8 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<bool> AnyInscricao(string codigoInscricao);
         Task<Inscricao> GetByInscricao(string codigoInscricao);
         Task InsertCamposDinamicos(InscricaoCampoValores camposDinamicos);
+        Task<IEnumerable<Inscricao>> GetAllPending(DateTime dataBase);
+
 
 
     }

@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using QRCoder;
 using RccManager.Domain.Entities;
@@ -155,6 +156,14 @@ public static class Utils
         Console.WriteLine(Directory.GetCurrentDirectory());
 
         return $"/qrcodes/{codigoInscricao}.png";
+    }
+
+    public static string SomenteNumeros(string texto)
+    {
+        if (string.IsNullOrEmpty(texto))
+            return string.Empty;
+
+        return Regex.Replace(texto, @"\D", "");
     }
 }
 

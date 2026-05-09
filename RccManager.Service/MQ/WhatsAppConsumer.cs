@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Hosting;
@@ -16,120 +16,136 @@ namespace RccManager.Service.MQ
         private readonly IWhatsAppService _whatsAppService;
         private IChannel _channel;
 
+        private const int MAX_RETRY = 5;
+
         public WhatsAppConsumer(RabbitMQConnection rmq, IWhatsAppService whatsAppService)
         {
             _rmq = rmq;
             _whatsAppService = whatsAppService;
         }
 
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Retry com delay em caso de falha
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    Console.WriteLine("🔌 Tentando conectar ao RabbitMQ. ..");
+                    Console.WriteLine("🔌 Conectando ao RabbitMQ...");
                     
                     _channel = await _rmq.CreateChannelAsync();
 
-                    Console.WriteLine("✅ Conectado ao RabbitMQ - WhatsApp com sucesso !");
+                    await _channel.QueueDeclareAsync("whatsapp_queue", true, false, false);
+                    await _channel.QueueDeclareAsync("whatsapp_retry_queue", true, false, false);
+                    await _channel.QueueDeclareAsync("whatsapp_error_queue", true, false, false);
 
-                    await _channel.QueueDeclareAsync(
-                        queue: "whatsapp_queue",
-                        durable: true,
-                        exclusive: false,
-                        autoDelete: false,
-                        arguments: null
-                    );
-
-                    // Configurar prefetch para processar 1 mensagem por vez
                     await _channel.BasicQosAsync(0, 1, false);
 
                     var consumer = new AsyncEventingBasicConsumer(_channel);
 
                     consumer.ReceivedAsync += async (model, ea) =>
                     {
+                        var body = ea.Body.ToArray();
+                        var json = Encoding.UTF8.GetString(body);
+
+                        int retry = GetRetryCount(ea);
+
                         try
                         {
-                            var body = ea.Body.ToArray();
-                            var json = Encoding.UTF8.GetString(body);
                             var message = JsonSerializer.Deserialize<InscricaoMQResponse>(json);
 
-                            Console.WriteLine($"📩 Processando mensagem  para: {message?.Telefone}");
+                            Console.WriteLine($"📩 Processando: {message?.Telefone} | Retry: {retry}");
 
-                            if (message != null)
+                            if (message == null)
                             {
-                                message.Telefone =  "55" + Utils.SomenteNumeros(message.Telefone);
-
-                                await _whatsAppService.EnviarTexto(message);
-
-                                // ⏱ Delay anti-ban
-                                await Task.Delay(Random.Shared.Next(2000, 5000));
-
-                                await _whatsAppService.EnviarQrCode(message);
-
-                                await _channel.BasicAckAsync(ea.DeliveryTag, false);
-                                Console.WriteLine($"✅ Mensagem enviada com sucesso para: {message.Telefone}");
-                            }
-                            else
-                            {
-                                Console.WriteLine("⚠️ Mensagem deserializada é nula");
                                 await _channel.BasicNackAsync(ea.DeliveryTag, false, false);
+                                return;
                             }
-                        }
-                        catch (JsonException jsonEx)
-                        {
-                            Console.WriteLine($"❌ Erro ao deserializar mensagem: {jsonEx.Message}");
-                            // Rejeitar mensagem sem requeue (mensagem inválida)
-                            await _channel.BasicNackAsync(ea.DeliveryTag, false, false);
+
+                            message.Telefone = "55" + Utils.SomenteNumeros(message.Telefone);
+
+                            await _whatsAppService.EnviarTexto(message);
+
+                            await Task.Delay(Random.Shared.Next(2000, 5000));
+
+                            await _whatsAppService.EnviarQrCode(message);
+
+                            await _channel.BasicAckAsync(ea.DeliveryTag, false);
+
+                            Console.WriteLine($"✅ Sucesso: {message.Telefone}");
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"❌ Erro ao processar mensagem: {ex.Message}");
-                            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                            // Rejeitar com requeue para tentar novamente
-                            await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
+                            Console.WriteLine($"❌ Erro: {ex.Message}");
+
+                            if (retry < MAX_RETRY)
+                            {
+                                Console.WriteLine($"🔁 Retry {retry + 1}/{MAX_RETRY}");
+
+                                PublishWithRetry(body, retry + 1);
+
+                                await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                            }
+                            else
+                            {
+                                Console.WriteLine("💀 Mensagem enviada para fila de erro");
+
+                                await _channel.BasicPublishAsync(
+                                    exchange: "",
+                                    routingKey: "whatsapp_error_queue",
+                                    body: body
+                                );
+
+                                await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                            }
                         }
                     };
 
-                    await _channel.BasicConsumeAsync(
-                        queue: "whatsapp_queue",
-                        autoAck: false,
-                        consumer: consumer
-                    );
+                    await _channel.BasicConsumeAsync("whatsapp_queue", false, consumer);
 
                     Console.WriteLine("👂 Aguardando mensagens...");
-
-                    // Manter o consumer ativo até o cancellation
                     await Task.Delay(Timeout.Infinite, stoppingToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    Console.WriteLine("🛑 Consumer está sendo encerrado...");
-                    break;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("-*-*-*- ERRO CONSUMER -*-*-*-");
-                    Console.WriteLine($"Mensagem: {ex.Message}");
-                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-
-                    // Aguardar antes de tentar reconectar
-                    if (!stoppingToken.IsCancellationRequested)
-                    {
-                        Console.WriteLine("⏳ Aguardando 5 segundos antes de reconectar - WhatsApp...");
-                        await Task.Delay(5000, stoppingToken);
-                    }
+                    Console.WriteLine($"Erro conexão: {ex.Message}");
+                    await Task.Delay(5000, stoppingToken);
                 }
             }
         }
 
+        private int GetRetryCount(BasicDeliverEventArgs ea)
+        {
+            if (ea.BasicProperties?.Headers != null &&
+                ea.BasicProperties.Headers.TryGetValue("x-retry", out var value))
+            {
+                return Convert.ToInt32(Encoding.UTF8.GetString((byte[])value));
+            }
+
+            return 0;
+        }
+
+        private async Task PublishWithRetry(byte[] body, int retry)
+        {
+            var props = new BasicProperties
+            {
+                Persistent = true,
+                Headers = new Dictionary<string, object>
+                {
+                    { "x-retry", Encoding.UTF8.GetBytes(retry.ToString()) }
+                }
+            };
+        
+            await _channel.BasicPublishAsync(
+                exchange: "",
+                routingKey: "whatsapp_retry_queue",
+                mandatory: false,
+                basicProperties: props,
+                body: body
+            );    
+        }
+
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            Console.WriteLine("🛑 Encerrando consumer...");
-            
             if (_channel != null)
             {
                 await _channel.CloseAsync();
@@ -138,8 +154,5 @@ namespace RccManager.Service.MQ
 
             await base.StopAsync(cancellationToken);
         }
-
-        
     }
 }
-

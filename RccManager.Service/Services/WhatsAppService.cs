@@ -1,7 +1,8 @@
-﻿using System;
+using System;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using RccManager.Domain.Entities;
+using System.Threading.Tasks;
 using RccManager.Domain.Interfaces.Services;
 using RccManager.Domain.Responses;
 
@@ -18,50 +19,18 @@ namespace RccManager.Service.Services
 
         public async Task EnviarTexto(InscricaoMQResponse m)
         {
-            try
+            var mensagem = MontarMensagemTexto(m);
+
+            var payload = new
             {
-                var mensagem = string.Join("\n\n", new[]
+                number = m.Telefone,
+                textMessage = new
                 {
-                    $"Olá, {m.Nome}! 😊",
-                    $"Seu pagamento para o evento *{m.NomeEvento}* foi confirmado ✅",
-                    $"📅 {m.DataInicio:dd/MM/yyyy}",
-                    $"📍 {m.Local}",
-                    $"🆔 Código: {m.CodigoInscricao}",
-                    "Apresente seu CPF ou código na entrada.",
-                    "Em seguida enviarei seu QR Code 🎟️",
+                    text = mensagem
+                }
+            };
 
-                    "⚠️ Esta é uma mensagem automática de confirmação de pagamento.",
-                    "Para outras informações, entre em contato com o organizador do evento."
-                });
-
-                var payload = new
-                {
-                    number = m.Telefone,
-                    textMessage = new
-                    {
-                        text = mensagem
-                    }
-                };
-
-
-                var response = await _http.PostAsync(
-                    $"/message/sendText/danweb",
-                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
-                );
-
-                if (!response.IsSuccessStatusCode)
-                    Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
-
-
-                response.EnsureSuccessStatusCode();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Erro Enviar  Texto: " + ex.StackTrace);
-
-                throw;
-            }
-            
+            await PostAsync("/message/sendText/danweb", payload);
         }
 
         public async Task EnviarQrCode(InscricaoMQResponse m)
@@ -79,16 +48,45 @@ namespace RccManager.Service.Services
                 }
             };
 
-            var response = await _http.PostAsync(
-                $"/message/sendMedia/danweb",
-                new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+            await PostAsync("/message/sendMedia/danweb", payload);
+        }
+
+        // 🔥 Centraliza chamada HTTP + tratamento de erro
+        private async Task PostAsync(string url, object payload)
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json"
             );
 
-            if (!response.IsSuccessStatusCode)
-                Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
+            var response = await _http.PostAsync(url, content);
 
-            response.EnsureSuccessStatusCode();
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // 🔥 ESSENCIAL: lançar erro pra retry no RabbitMQ
+                throw new Exception($"Erro ao enviar WhatsApp ({url}): {response.StatusCode} - {responseBody}");
+            }
+        }
+
+        // 🔥 Separado pra organização/teste
+        private string MontarMensagemTexto(InscricaoMQResponse m)
+        {
+            return string.Join("\n\n", new[]
+            {
+                $"Olá, {m.Nome}! 😊",
+                $"Seu pagamento para o evento *{m.NomeEvento}* foi confirmado ✅",
+                $"📅 {m.DataInicio:dd/MM/yyyy}",
+                $"📍 {m.Local}",
+                $"🆔 Código: {m.CodigoInscricao}",
+                "Apresente seu CPF ou código na entrada.",
+                "Em seguida enviarei seu QR Code 🎟️",
+
+                "⚠️ Esta é uma mensagem automática de confirmação de pagamento.",
+                "Para outras informações, entre em contato com o organizador do evento."
+            });
         }
     }
 }
-

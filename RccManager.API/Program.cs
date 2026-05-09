@@ -238,11 +238,11 @@ RecurringJob.AddOrUpdate<IEventoService>(
     Cron.HourInterval(1)
 );
 
-RecurringJob.AddOrUpdate<IGrupoOracaoService>(
-    "import-csv",
-    x => x.ImportCSV(),
-    Cron.Daily(4)
-);
+// RecurringJob.AddOrUpdate<IGrupoOracaoService>(
+//     "import-csv",
+//     x => x.ImportCSV(),
+//     Cron.Daily(4)
+// );
 
 app.Run();
 

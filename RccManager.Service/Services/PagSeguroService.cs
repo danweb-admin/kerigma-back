@@ -189,6 +189,8 @@ namespace RccManager.Service.Services
                 throw new Exception(erro);
             }
 
+             Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
+
             var result = await response.Content.ReadFromJsonAsync<PagSeguroResponse>();
 
             return result;

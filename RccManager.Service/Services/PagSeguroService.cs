@@ -175,11 +175,6 @@ namespace RccManager.Service.Services
                             {
                                 option = "INSTALLMENTS_LIMIT",
                                 value = $"{evento.QtdParcelas}"
-                            },
-                            new
-                            {
-                                option = "INTEREST_FREE_INSTALLMENTS",
-                                value = "1"
                             }
                         }
                     }

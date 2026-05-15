@@ -71,6 +71,8 @@ namespace RccManager.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetSlug(string slug)
         {
+            Console.WriteLine($"Evento: {slug}");
+            
             var evento = await _eventoService.GetSlug(slug);
             return Ok(evento);
         }
@@ -81,6 +83,8 @@ namespace RccManager.API.Controllers
         {
             try
             {
+                Console.WriteLine($"CPF: {cpf}");
+            
                 var evento = await _eventoService.VerificarCPF(cpf,eventoId);
 
                 return Ok(evento);

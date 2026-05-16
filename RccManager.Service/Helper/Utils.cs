@@ -138,7 +138,7 @@ public static class Utils
     {
         var pasta = Path.Combine(Directory.GetCurrentDirectory(), "qrcodes");
 
-        var urlCheckin = $"https://backend.auxiliadoraonline.com.br/api/v1/eventos/{codigoInscricao}/checkin";
+        var urlCheckin = $"https://backend.kerigma-eventos.online/api/v1/eventos/{codigoInscricao}/checkin";
 
         if (!Directory.Exists(pasta))
             Directory.CreateDirectory(pasta);

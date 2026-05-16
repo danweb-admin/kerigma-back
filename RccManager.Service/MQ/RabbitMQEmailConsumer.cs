@@ -160,7 +160,7 @@ namespace RccManager.Service.MQ
 
                 Utils.GerarQrCodePNG(inscricao.CodigoInscricao);
 
-                var urlQrCode = $"https://backend.auxiliadoraonline.com.br/qrcodes/{inscricao.CodigoInscricao}.png";
+                var urlQrCode = $"https://backend.kerigma-eventos.online/qrcodes/{inscricao.CodigoInscricao}.png";
 
                 string html = await File.ReadAllTextAsync(templatePath);
 
@@ -190,7 +190,7 @@ namespace RccManager.Service.MQ
 
                 var message = new MailMessage
                 {
-                    From = new MailAddress(senderEmail,"Paróquia Nossa Senhora Auxiliadora - Eventos"),
+                    From = new MailAddress(senderEmail,"Kerigma Eventos - Eventos"),
                     Subject = $"Pagamento confirmado! Seu ingresso está disponível - {inscricao.NomeEvento} - {inscricao.CodigoInscricao}",
                     Body = html,
                     IsBodyHtml = true

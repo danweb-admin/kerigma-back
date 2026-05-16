@@ -35,7 +35,7 @@ namespace RccManager.Service.Services
 
         public async Task EnviarQrCode(InscricaoMQResponse m)
         {
-            var urlQrCode = $"https://backend.rcc-londrina.online/qrcodes/{m.CodigoInscricao}.png";
+            var urlQrCode = $"https://backend.kerigma-eventos.online/qrcodes/{m.CodigoInscricao}.png";
 
             var payload = new
             {

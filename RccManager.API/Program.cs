@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "https://www.kerigma-eventos.online",
                 "https://checkin.kerigma-eventos.online",
-                "http://gerenciador.kerigma-eventos.online",
+                "https://gerenciador.kerigma-eventos.online",
                 "https://gerenciador.auxiliadoraonline.com.br",
                 "http://localhost:4200",
                 "https://eventos.auxiliadoraonline.com.br",

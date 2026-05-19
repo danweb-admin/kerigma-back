@@ -181,6 +181,14 @@ namespace RccManager.Service.Services
                 },
             };
 
+            Console.WriteLine("request: " + body.ToString());
+            var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            Console.WriteLine("JSON: " + json);
+
             var response = await http.PostAsJsonAsync($"{url}/checkouts", body);
 
             if (!response.IsSuccessStatusCode)

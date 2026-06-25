@@ -88,7 +88,7 @@ namespace RccManager.API.Controllers
 
             var descricao = evento.Nome?.Replace("'", "&apos;") ?? "";
             var titulo = evento.Nome?.Replace("'", "&apos;") ?? "";
-            var imagem = evento.BannerImagem;
+            var imagem = evento.CapaImagem;
 
             var html = $@"
         <!DOCTYPE html>

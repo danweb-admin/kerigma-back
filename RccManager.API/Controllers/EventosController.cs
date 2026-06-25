@@ -77,6 +77,50 @@ namespace RccManager.API.Controllers
             return Ok(evento);
         }
 
+        [HttpGet("share/{slug}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Share(string slug)
+        {
+            var evento = await _eventoService.GetSlug(slug);
+
+            if (evento == null)
+                return NotFound();
+
+            var descricao = evento.Nome?.Replace("'", "&apos;") ?? "";
+            var titulo = evento.Nome?.Replace("'", "&apos;") ?? "";
+            var imagem = evento.BannerImagem;
+
+            var html = $@"
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset='utf-8'>
+
+        <title>{titulo}</title>
+
+        <meta property='og:title' content='{titulo}' />
+        <meta property='og:description' content='{descricao}' />
+        <meta property='og:image' content='{imagem}' />
+        <meta property='og:url' content='https://www.kerigma-eventos.online/eventos/{slug}' />
+        <meta property='og:type' content='website' />
+
+        <meta name='twitter:card' content='summary_large_image' />
+
+        <script>
+        window.location.replace(
+        'https://www.kerigma-eventos.online/eventos/{slug}'
+        );
+        </script>
+
+        </head>
+        <body>
+        Redirecionando...
+        </body>
+        </html>";
+
+            return Content(html, "text/html");
+        }
+
         [HttpGet("verificar-cpf")]
         [AllowAnonymous]
         public async Task<IActionResult> VerificarCPF(string cpf, Guid eventoId)

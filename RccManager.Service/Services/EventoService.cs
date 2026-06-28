@@ -504,7 +504,7 @@ namespace RccManager.Domain.Services
         public async Task VerificaInscricoesPendentes()
         {
             Console.WriteLine("******** INICIO - VerificaInscricoesPendentes() ********");
-            var dataBase = DateTime.Now.AddDays(-1);
+            var dataBase = DateTime.Now.AddHours(-3);
 
             Console.WriteLine("DataBase: " + dataBase.ToString("dd/MM/yyyy HH:mm:ss"));
 
@@ -517,6 +517,7 @@ namespace RccManager.Domain.Services
                 foreach (var item in pendentes)
                 {
                     Console.WriteLine($"Inscricao: {item.CodigoInscricao}, Nome: {item.Nome}, Email: {item.Email}, Valor: {item.ValorInscricao}");
+                    await _inscricaoRepository.Delete(item.Id);
                 }
                 
                 

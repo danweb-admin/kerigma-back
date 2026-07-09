@@ -12,6 +12,7 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<IQueryable<T>> Query(Expression<Func<T, bool>> filter);
         Task<bool> Delete(Guid id);
         Task<T> GetById(Guid id);
+
     }
 }
 

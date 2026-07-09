@@ -33,6 +33,8 @@ namespace RccManager.Domain.Entities
         public DateTime? DataLiberacao { get; set; }
         public string NSU { get; set; }
         public virtual Evento Evento { get; set; }
+        public virtual Financeiro Financeiro { get; set; }
+
     }
 }
 

@@ -38,11 +38,11 @@ namespace RccManager.Domain.Services
         private readonly IHubContext<CheckinHub> _hub;
         private readonly IEmailService _emailService;
         private readonly WhatsAppProducer _whatsAppProducer;
-
+        private readonly IFinanceiroService _financeiroService;
         private readonly IMapper _mapper;
 
 
-        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer)
+        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer, IFinanceiroService financeiroService)
         {
             _eventoRepository = eventoRepository;
             _inscricaoRepository = inscricaoRepository;
@@ -57,6 +57,7 @@ namespace RccManager.Domain.Services
             _emailService = emailService;
             _servoRepository = servoRepository;
             _whatsAppProducer = whatsAppProducer;
+            _financeiroService = financeiroService;
         }
 
         public async Task<HttpResponse> Create(EventoDto dto, Guid userId)
@@ -537,6 +538,7 @@ namespace RccManager.Domain.Services
         public async Task<ValidationResult> EventosWebhook(string response)
         {
             var financeira = Environment.GetEnvironmentVariable("Financeira");
+            PagSeguroWebhook webhookPagSeguro = new PagSeguroWebhook();
 
             Inscricao inscricao = new Inscricao();
 
@@ -580,9 +582,9 @@ namespace RccManager.Domain.Services
 
             if (financeira == "PagSeguro")
             {
-                var webhookResponse = JsonConvert.DeserializeObject<PagSeguroWebhook>(response);
+                webhookPagSeguro = JsonConvert.DeserializeObject<PagSeguroWebhook>(response);
 
-                string codigoInscricao = webhookResponse.Reference_Id;
+                string codigoInscricao = webhookPagSeguro.Reference_Id;
 
                 inscricao = await _inscricaoRepository.GetByCodigo(codigoInscricao);
 
@@ -593,7 +595,7 @@ namespace RccManager.Domain.Services
                 if (inscricao.Status == "pagamento_confirmado")
                     return ValidationResult.Success;
 
-                var charge = webhookResponse.Charges.First();
+                var charge = webhookPagSeguro.Charges.First();
 
                 if (charge.Status != "PAID")
                     return new ValidationResult("❌ Erro no processamento do pagamento.");
@@ -608,6 +610,17 @@ namespace RccManager.Domain.Services
             }
 
             await _inscricaoRepository.Update(inscricao);
+            try
+            {
+                await _financeiroService.RegistrarFinanceiro(inscricao, webhookPagSeguro);
+
+            }
+            catch (System.Exception ex)
+            {
+               Console.WriteLine("*-*-ERRO AO INSERIR FINANCEIRO*-*-");
+
+            }
+
 
             var inscricaoMQ = ConvertInscricaoMQ(inscricao);
 
@@ -726,6 +739,8 @@ namespace RccManager.Domain.Services
 
             return 0;
         }
+
+        
 
         // ==========================================================
         // MÉTODO AUXILIAR PARA 1:1

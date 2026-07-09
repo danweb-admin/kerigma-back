@@ -36,6 +36,7 @@
     <None Remove="Dtos\UsuarioCheckin\" />
     <None Remove="Dtos\TransferenciaServico\" />
     <None Remove="Dtos\EventoUsuarios\" />
+    <None Remove="Dtos\Financeiro\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Entities\" />
@@ -61,5 +62,6 @@
     <Folder Include="Dtos\UsuarioCheckin\" />
     <Folder Include="Dtos\TransferenciaServico\" />
     <Folder Include="Dtos\EventoUsuarios\" />
+    <Folder Include="Dtos\Financeiro\" />
   </ItemGroup>
 </Project>

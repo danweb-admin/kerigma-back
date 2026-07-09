@@ -8,7 +8,8 @@ namespace RccManager.Service.Enum
         GrupoOracao,
         Servo,
         ServoTemp,
-        User
+        User,
+        Financeiro
     }
 }
 

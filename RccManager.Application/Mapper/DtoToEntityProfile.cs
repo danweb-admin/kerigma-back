@@ -3,6 +3,7 @@ using AutoMapper;
 using RccManager.Domain.Dtos.DecanatoSetor;
 using RccManager.Domain.Dtos.Evento;
 using RccManager.Domain.Dtos.EventoUsuarios;
+using RccManager.Domain.Dtos.Financeiro;
 using RccManager.Domain.Dtos.Formacao;
 using RccManager.Domain.Dtos.FormacoesServo;
 using RccManager.Domain.Dtos.GrupoOracao;
@@ -195,6 +196,15 @@ public class DtoToEntityProfile : Profile
             .ReverseMap();
 
         CreateMap<EventoUsuarios, EventoUsuariosDtoResult>()
+            .ReverseMap();
+
+        // ======================================================
+        // Financeiro 
+        // ======================================================
+        CreateMap<Financeiro, FinanceiroDto>()
+            .ReverseMap();
+
+        CreateMap<Financeiro, FinanceiroDtoResult>()
             .ReverseMap();
 
         

@@ -37,6 +37,10 @@ namespace RccManager.Domain.Entities
         // Navegação
         public virtual Inscricao Inscricao { get; set; }
 
+        public Financeiro()
+        {
+        }
+
         public Financeiro(Inscricao inscricao)
         {
             InscricaoId = inscricao.Id;

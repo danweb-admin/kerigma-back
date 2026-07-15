@@ -39,6 +39,10 @@ namespace RccManager.Domain.Entities
 
         public virtual ICollection<WalletMovimento> WalletMovimentos { get; set; }
 
+        public Financeiro()
+        {
+        }
+
         public Financeiro(Inscricao inscricao)
         {
             InscricaoId = inscricao.Id;

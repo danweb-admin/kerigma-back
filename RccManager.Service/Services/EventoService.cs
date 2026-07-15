@@ -20,6 +20,7 @@ using RccManager.Domain.Responses;
 using RccManager.Service.Helper;
 using RccManager.Service.Hubs;
 using RccManager.Service.MQ;
+using RccManager.Service.Services;
 using static QRCoder.PayloadGenerator;
 
 namespace RccManager.Domain.Services
@@ -39,10 +40,12 @@ namespace RccManager.Domain.Services
         private readonly IEmailService _emailService;
         private readonly WhatsAppProducer _whatsAppProducer;
         private readonly IFinanceiroService _financeiroService;
+        private readonly IWalletService _walletService;
+
         private readonly IMapper _mapper;
 
 
-        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer, IFinanceiroService financeiroService)
+        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer, IFinanceiroService financeiroService, IWalletService walletService)
         {
             _eventoRepository = eventoRepository;
             _inscricaoRepository = inscricaoRepository;
@@ -58,6 +61,7 @@ namespace RccManager.Domain.Services
             _servoRepository = servoRepository;
             _whatsAppProducer = whatsAppProducer;
             _financeiroService = financeiroService;
+            _walletService = walletService;
         }
 
         public async Task<HttpResponse> Create(EventoDto dto, Guid userId)
@@ -610,17 +614,17 @@ namespace RccManager.Domain.Services
             }
 
             await _inscricaoRepository.Update(inscricao);
+
             try
             {
                 await _financeiroService.RegistrarFinanceiro(inscricao, webhookPagSeguro);
-
             }
             catch (System.Exception ex)
             {
-               Console.WriteLine("*-*-ERRO AO INSERIR FINANCEIRO*-*-");
+               Console.WriteLine("*-*-*-* ERRO FINANCEIRO *-*-*-*: ");
 
             }
-
+            
 
             var inscricaoMQ = ConvertInscricaoMQ(inscricao);
 
@@ -668,8 +672,6 @@ namespace RccManager.Domain.Services
             {
                 Utils.GerarQrCodePNG(inscricao.CodigoInscricao);
             }
-
-
         }
 
         public async Task<DataTable> ExportarInscricoes(Guid eventoId)

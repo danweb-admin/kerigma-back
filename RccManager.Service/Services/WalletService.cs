@@ -1,0 +1,120 @@
+﻿using RccManager.Domain.Entities;
+using RccManager.Domain.Interfaces.Repositories;
+using RccManager.Domain.Interfaces.Services;
+
+namespace RccManager.Service.Services
+{
+    public class WalletService : IWalletService
+    {
+        private readonly IWalletRepository walletRepository;
+        private readonly IWalletMovimentoService walletMovimentoService;
+
+        public WalletService(
+            IWalletRepository walletRepository,
+            IWalletMovimentoService walletMovimentoService)
+        {
+            this.walletRepository = walletRepository;
+            this.walletMovimentoService = walletMovimentoService;
+        }
+
+        public async Task<Wallet> GetByOrganizador(Guid organizadorId)
+        {
+            return await walletRepository.GetByOrganizador(organizadorId);
+        }
+
+        public async Task CreditarPix(Financeiro financeiro)
+        {
+            var wallet = await walletRepository.GetOrCreate(financeiro.OrganizadorId);
+
+            var saldoAnterior = wallet.SaldoDisponivel;
+
+            wallet.SaldoDisponivel += financeiro.ValorLiquido;
+
+            await walletRepository.Update(wallet);
+
+            await walletMovimentoService.RegistrarMovimento(
+                wallet,
+                financeiro,
+                financeiro.ValorLiquido,
+                WalletTipoMovimento.CreditoPix,
+                "Pagamento recebido via PIX",
+                "WEBHOOK",
+                saldoAnterior,
+                wallet.SaldoDisponivel);
+        }
+
+        public async Task CreditarCartao(Financeiro financeiro)
+        {
+            var wallet = await walletRepository.GetOrCreate(financeiro.OrganizadorId);
+
+            var saldoAnterior = wallet.SaldoPendente;
+
+            wallet.SaldoPendente += financeiro.ValorLiquido;
+
+            await walletRepository.Update(wallet);
+
+            await walletMovimentoService.RegistrarMovimento(
+                wallet,
+                financeiro,
+                financeiro.ValorLiquido,
+                WalletTipoMovimento.CreditoCartao,
+                "Pagamento recebido via Cartão",
+                "WEBHOOK",
+                saldoAnterior,
+                wallet.SaldoPendente);
+        }
+
+        public async Task LiberarSaldo(Financeiro financeiro)
+        {
+            var wallet = await walletRepository.GetByOrganizador(financeiro.OrganizadorId);
+
+            if (wallet == null)
+                return;
+
+            var saldoAnterior = wallet.SaldoDisponivel;
+
+            wallet.SaldoPendente -= financeiro.ValorLiquido;
+            wallet.SaldoDisponivel += financeiro.ValorLiquido;
+
+            await walletRepository.Update(wallet);
+
+            await walletMovimentoService.RegistrarMovimento(
+                wallet,
+                financeiro,
+                financeiro.ValorLiquido,
+                WalletTipoMovimento.LiberacaoCartao,
+                "Liberação automática D+14",
+                "JOB",
+                saldoAnterior,
+                wallet.SaldoDisponivel);
+        }
+
+        public async Task DebitarRepasse(Guid organizadorId, decimal valor)
+        {
+            var wallet = await walletRepository.GetByOrganizador(organizadorId);
+
+            if (wallet == null)
+                throw new Exception("Wallet não encontrada.");
+
+            if (wallet.SaldoDisponivel < valor)
+                throw new Exception("Saldo insuficiente.");
+
+            var saldoAnterior = wallet.SaldoDisponivel;
+
+            wallet.SaldoDisponivel -= valor;
+            wallet.SaldoRepassado += valor;
+
+            await walletRepository.Update(wallet);
+
+            await walletMovimentoService.RegistrarMovimento(
+                wallet,
+                null,
+                -valor,
+                WalletTipoMovimento.Repasse,
+                "Repasse realizado",
+                "REPASSE",
+                saldoAnterior,
+                wallet.SaldoDisponivel);
+        }
+    }
+}

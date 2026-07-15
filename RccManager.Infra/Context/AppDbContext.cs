@@ -30,8 +30,8 @@ public class AppDbContext : DbContext
     public DbSet<InscricaoCampoValores> InscricaoCampoValores { get; set; }
     public DbSet<EventoUsuarios> EventoUsuarios { get; set; }
     public DbSet<Financeiro> Financeiros { get; set; }
-
-
+    public DbSet<Wallet> Wallets { get; set; }
+    public DbSet<WalletMovimento> WalletMovimentos { get; set; }
 
     public DbSet<User> Users { get; set; }
 
@@ -71,6 +71,9 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new EventoCamposMap());
         modelBuilder.ApplyConfiguration(new EventoUsuariosMap());
         modelBuilder.ApplyConfiguration(new FinanceiroMap());
+        modelBuilder.ApplyConfiguration(new WalletMap());
+        modelBuilder.ApplyConfiguration(new WalletMovimentoMap());
+
 
 
     }

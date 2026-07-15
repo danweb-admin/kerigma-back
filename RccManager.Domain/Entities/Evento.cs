@@ -28,6 +28,8 @@ namespace RccManager.Domain.Entities
 
         public virtual Local Local { get; set; }
         public virtual Sobre Sobre { get; set; }
+        public virtual Wallet Wallet { get; set; }
+
         public virtual InformacoesAdicionais InformacoesAdicionais { get; set; }
         public virtual ICollection<Participacao> Participacoes { get; set; }
         public virtual ICollection<LoteInscricao> LotesInscricoes { get; set; }

@@ -14,15 +14,19 @@ namespace RccManager.Service.Services
         private readonly IMapper mapper;
         private readonly IFinanceiroRepository repository;
         private readonly IHistoryRepository history;
+        private readonly IWalletService walletService;
+
 
         public FinanceiroService(
             IMapper mapper,
             IFinanceiroRepository repository,
-            IHistoryRepository history)
+            IHistoryRepository history,
+            IWalletService walletService)
         {
             this.mapper = mapper;
             this.repository = repository;
             this.history = history;
+            this.walletService = walletService;
         }
 
         public async Task<HttpResponse> Create(FinanceiroDto financeiroDto)
@@ -142,17 +146,18 @@ namespace RccManager.Service.Services
                 OperationEnum.Criacao.ToString());
         }
 
-        public async Task RegistrarFinanceiro(Inscricao inscricao, PagSeguroWebhook webhook)
+        public async Task RegistrarFinanceiro(Inscricao inscricao,PagSeguroWebhook webhook)
         {
-            if (await repository.ExistsByInscricao(inscricao.Id))
+            var exists = await repository.ExistsByInscricao(inscricao.Id);
+
+            if (exists)
                 return;
 
             var charge = webhook.Charges.First();
 
             var financeiro = new Financeiro(inscricao)
             {
-                
-                OrganizadorId = inscricao.EventoId, // ajuste conforme sua regra
+                OrganizadorId = inscricao.EventoId, // depois ajustar para o organizador correto
 
                 OrderId = webhook.Id,
                 ChargeId = charge.Id,
@@ -167,7 +172,13 @@ namespace RccManager.Service.Services
                         : "AGUARDANDO_RECEBIMENTO"
             };
 
-            await repository.Insert(financeiro);
+            financeiro = await repository.Insert(financeiro);
+
+            // Atualiza a Wallet
+            if (financeiro.StatusFinanceiro == "RECEBIDO")
+                await walletService.CreditarPix(financeiro);
+            else
+                await walletService.CreditarCartao(financeiro);
         }
     }
 }

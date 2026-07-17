@@ -180,5 +180,60 @@ namespace RccManager.Service.Services
             else
                 await walletService.CreditarCartao(financeiro);
         }
+
+        public async Task<Financeiro> RegistrarFinanceiroMigracao(Inscricao inscricao)
+        {
+            var exists = await repository.GetByInscricao(inscricao.Id);
+
+            if (exists != null)
+                return exists;
+
+            var financeiro = new Financeiro(inscricao)
+            {
+                OrganizadorId = inscricao.EventoId, // Wallet por Evento
+
+                OrderId = null,
+                ChargeId = null,
+
+                ReferenceId = inscricao.CodigoInscricao,
+                NSU = inscricao.NSU,
+
+                Parcelas = 1, // ajuste caso possua essa informação
+
+                DataPagamento = inscricao.DataPagamento,
+                DataPrevistaRecebimento = inscricao.DataLiberacao,
+
+                StatusFinanceiro =
+                    inscricao.TipoPagamento == "pix"
+                        ? "RECEBIDO"
+                        : "AGUARDANDO_RECEBIMENTO"
+            };
+
+            financeiro = await repository.Insert(financeiro);
+
+            
+
+            if (financeiro.FormaPagamento == "pix" )
+                await walletService.CreditarPix(financeiro);
+            else
+                await walletService.CreditarCartao(financeiro);
+
+            return financeiro;
+        }
+
+        public async Task LiberarRecebimentosCartao()
+        {
+            var financeiros = await repository.GetPendentesRecebimento();
+
+            foreach (var financeiro in financeiros)
+            {
+                financeiro.StatusFinanceiro = "RECEBIDO";
+                financeiro.DataRecebimento = DateTime.Now;
+
+                await repository.Update(financeiro);
+
+                await walletService.LiberarSaldo(financeiro);
+            }
+        }
     }
 }

@@ -28,6 +28,7 @@ namespace RccManager.Application.DI
             services.AddScoped<IFinanceiroRepository, FinanceiroRepository>();
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddScoped<IWalletMovimentoRepository, WalletMovimentoRepository>();
+            services.AddScoped<IRepasseRepository, RepasseRepository>();
 
 
 

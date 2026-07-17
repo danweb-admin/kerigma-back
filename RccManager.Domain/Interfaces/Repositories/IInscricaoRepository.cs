@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using RccManager.Domain.Entities;
 
 namespace RccManager.Domain.Interfaces.Repositories
@@ -12,8 +13,7 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<Inscricao> GetByInscricao(string codigoInscricao);
         Task InsertCamposDinamicos(InscricaoCampoValores camposDinamicos);
         Task<IEnumerable<Inscricao>> GetAllPending(DateTime dataBase);
-
-
+        Task<IEnumerable<Inscricao>> GetPagasSemFinanceiro();
 
     }
 }

@@ -421,6 +421,37 @@ namespace RccManager.API.Controllers
             }
         }
 
+        [HttpPut("migrar-inscricoes")]
+        [AllowAnonymous]
+        public async Task<IActionResult> MigrarInscricoes()
+        {
+            try
+            {
+                //await _eventoService.MigrarInscricoes();
+
+                return Ok(HttpStatusCode.NoContent);
+            }
+            catch (ValidateByNameException ex)
+            {
+                return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
+            }
+        }
+
+        [HttpPut("liberar-saldo")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LiberarSaldo()
+        {
+            try
+            {
+                //await _eventoService.LiberarSaldo();
+
+                return Ok(HttpStatusCode.NoContent);
+            }
+            catch (ValidateByNameException ex)
+            {
+                return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
+            }
+        }
         
     }
 }

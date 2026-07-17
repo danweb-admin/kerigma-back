@@ -1,5 +1,6 @@
 ﻿using RccManager.Domain.Dtos.Financeiro;
 using RccManager.Domain.Entities;
+using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Responses;
 
 namespace RccManager.Domain.Interfaces.Services
@@ -19,5 +20,9 @@ namespace RccManager.Domain.Interfaces.Services
         Task RegistrarPagamento(Financeiro financeiro);
 
         Task RegistrarFinanceiro(Inscricao inscricao, PagSeguroWebhook webhook);
+
+        Task<Financeiro> RegistrarFinanceiroMigracao(Inscricao inscricao);
+
+        Task LiberarRecebimentosCartao();
     }
 }

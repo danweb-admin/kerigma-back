@@ -73,6 +73,16 @@ namespace RccManager.Infra.Repositories
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Inscricao>> GetPagasSemFinanceiro()
+        {
+            return await dbSet
+                .Where(i => i.Status == "pagamento_confirmado" &&
+                            !context.Financeiros.Any(f => f.InscricaoId == i.Id))
+                .Include(i => i.Evento)
+                .OrderBy(i => i.DataPagamento)
+                .ToListAsync();
+        }
     }
 }
 

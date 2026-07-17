@@ -20,6 +20,7 @@ using Microsoft.Extensions.FileProviders;
 using System;
 using Hangfire;
 using RccManager.API.Filter;
+using RccManager.Service.Job;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -237,6 +238,11 @@ RecurringJob.AddOrUpdate<IEventoService>(
     x => x.VerificaInscricoesPendentes(),
     Cron.HourInterval(1)
 );
+
+RecurringJob.AddOrUpdate<LiberarRecebimentoCartaoJob>(
+    "LiberarRecebimentoCartao",
+    job => job.Execute(),
+    "0 4 * * *");
 
 // RecurringJob.AddOrUpdate<IGrupoOracaoService>(
 //     "import-csv",

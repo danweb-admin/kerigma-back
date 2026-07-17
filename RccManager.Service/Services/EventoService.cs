@@ -690,6 +690,23 @@ namespace RccManager.Domain.Services
             return stream.ToArray();
         }
 
+        public async Task MigrarInscricoes()
+        {
+            var inscricoes = await _inscricaoRepository.GetPagasSemFinanceiro();
+
+            foreach(var inscricao in inscricoes)
+            {
+                await _financeiroService.RegistrarFinanceiroMigracao(inscricao);
+            }
+        }
+
+        public async Task LiberarSaldo()
+        {
+            
+            await _financeiroService.LiberarRecebimentosCartao();
+            
+        }
+
         private bool EmailValido(string email)
         {
             string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";

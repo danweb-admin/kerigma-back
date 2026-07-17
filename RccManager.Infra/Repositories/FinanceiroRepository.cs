@@ -37,7 +37,9 @@ namespace RccManager.Infra.Repositories
         public async Task<IEnumerable<Financeiro>> GetPendentesRecebimento()
         {
             return await dbSet
-                .Where(x => x.StatusFinanceiro == "AGUARDANDO_RECEBIMENTO")
+                .Where(x =>
+                    x.StatusFinanceiro == "AGUARDANDO_RECEBIMENTO" &&
+                    x.DataPrevistaRecebimento <= DateTime.Now)
                 .ToListAsync();
         }
 

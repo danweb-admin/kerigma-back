@@ -25,6 +25,7 @@ namespace RccManager.Domain.Entities
         public int QtdParcelas { get; set; }
         public int LimiteParticipantes { get; set; }
         public decimal TaxaServico { get; set; }
+        public bool EventoGratuito { get; set; }
 
         public virtual Local Local { get; set; }
         public virtual Sobre Sobre { get; set; }

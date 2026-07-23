@@ -22,7 +22,8 @@ namespace RccManager.Service.Services
             string descricao,
             string origem,
             decimal saldoAnterior,
-            decimal saldoAtual)
+            decimal saldoAtual,
+            DateTime dataMovimento)
         {
             var movimento = new WalletMovimento
             {
@@ -38,7 +39,7 @@ namespace RccManager.Service.Services
                 SaldoAnterior = saldoAnterior,
                 SaldoAtual = saldoAtual,
 
-                DataMovimento = DateTime.Now
+                DataMovimento = dataMovimento
             };
 
             await repository.Insert(movimento);

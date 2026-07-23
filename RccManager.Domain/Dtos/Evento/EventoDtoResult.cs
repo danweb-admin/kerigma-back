@@ -22,6 +22,8 @@ namespace RccManager.Domain.Dtos.Evento
         public bool HabilitarCartao { get; set; }
         public bool HabilitarDinheiro { get; set; }
         public int QtdParcelas { get; set; }
+        public bool EventoGratuito { get; set; }
+
 
         // 🔗 Relações
         public LocalDto Local { get; set; }

@@ -12,6 +12,7 @@ namespace RccManager.Domain.Interfaces.Services
                 string descricao,
                 string origem,
                 decimal saldoAnterior,
-                decimal saldoAtual);
+                decimal saldoAtual,
+                DateTime dataMovimento);
     }
 }

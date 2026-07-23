@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -270,6 +271,11 @@ namespace RccManager.Domain.Services
 
             if (financeira == "PagSeguro")
             {
+                if (inscricao.TipoPagamento == "gratuito")
+                {
+                    inscricao_.Status = "pagamento_confirmado";
+                }
+
                 if (inscricao.TipoPagamento == "pix")
                 {
                     var qrCode = await _pagSeguroService.GerarLinkPagamentoAsync(inscricao);
@@ -334,6 +340,19 @@ namespace RccManager.Domain.Services
 
             if (result == null)
                 throw new WebException("Houve um problema para efetuar a Inscrição!");
+
+            if (inscricao.TipoPagamento == "gratuito")
+            {
+                var insc = await _inscricaoRepository.GetByCodigo(inscricao.CodigoInscricao);
+
+                var inscricaoMQ = ConvertInscricaoMQ(insc);
+
+                inscricaoMQ.Email = insc.Email;
+
+                await _producer.PublishEmail(inscricaoMQ);
+
+                await _whatsAppProducer.PublishWhatsAppMessage(inscricaoMQ);
+            }
 
             return _mapper.Map<InscricaoDto>(result);
 

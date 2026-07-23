@@ -40,7 +40,8 @@ namespace RccManager.Service.Services
                 "Pagamento recebido via PIX",
                 "WEBHOOK",
                 saldoAnterior,
-                wallet.SaldoDisponivel);
+                wallet.SaldoDisponivel,
+                financeiro.DataPagamento.Value);
         }
 
         public async Task CreditarCartao(Financeiro financeiro)
@@ -61,7 +62,8 @@ namespace RccManager.Service.Services
                 "Pagamento recebido via Cartão",
                 "WEBHOOK",
                 saldoAnterior,
-                wallet.SaldoPendente);
+                wallet.SaldoPendente,
+                financeiro.DataPagamento.Value);
         }
 
         public async Task LiberarSaldo(Financeiro financeiro)
@@ -86,7 +88,8 @@ namespace RccManager.Service.Services
                 "Liberação automática D+14",
                 "JOB",
                 saldoAnterior,
-                wallet.SaldoDisponivel);
+                wallet.SaldoDisponivel,
+                financeiro.DataPagamento.Value);
         }
 
         public async Task DebitarRepasse(Guid organizadorId, decimal valor)
@@ -114,7 +117,8 @@ namespace RccManager.Service.Services
                 "Repasse realizado",
                 "REPASSE",
                 saldoAnterior,
-                wallet.SaldoDisponivel);
+                wallet.SaldoDisponivel,
+                DateTime.Now);
         }
     }
 }

@@ -443,7 +443,6 @@ namespace RccManager.API.Controllers
         {
             try
             {
-                //await _eventoService.LiberarSaldo();
 
                 return Ok(HttpStatusCode.NoContent);
             }

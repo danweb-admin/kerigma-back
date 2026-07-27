@@ -73,7 +73,7 @@ namespace RccManager.Service.Services
                 {
                     new {
                         amount = new { value = (int)(inscricao.ValorInscricao * 100) },
-                        expiration_date = DateTime.Now.AddDays(1)
+                        expiration_date = DateTime.Now.AddHours(3)
                             .ToString("yyyy-MM-ddTHH:mm:sszzz") // formato ISO
                     }
                 },

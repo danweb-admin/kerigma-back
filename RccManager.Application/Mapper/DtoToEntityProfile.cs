@@ -14,6 +14,7 @@ using RccManager.Domain.Dtos.ServoTemp;
 using RccManager.Domain.Dtos.TransferenciaServico;
 using RccManager.Domain.Dtos.Users;
 using RccManager.Domain.Dtos.UsuarioCheckin;
+using RccManager.Domain.Dtos.Wallet;
 using RccManager.Domain.Entities;
 using RccManager.Service.Helper;
 using static RccManager.Application.Mapper.EntityToDtoProfile;
@@ -206,6 +207,24 @@ public class DtoToEntityProfile : Profile
 
         CreateMap<Financeiro, FinanceiroDtoResult>()
             .ReverseMap();
+
+        // ======================================================
+        // Wallet 
+        // ======================================================
+        CreateMap<Wallet, WalletDtoResult>()
+            .ReverseMap();
+
+        CreateMap<WalletMovimento, WalletMovimentoDtoResult>()
+        .ForMember(dest => dest.Entrada,
+            opt => opt.MapFrom(src =>
+                src.Origem.Equals("Repasse", StringComparison.OrdinalIgnoreCase)
+                    ? 0
+                    : src.Valor))
+        .ForMember(dest => dest.Saida,
+            opt => opt.MapFrom(src =>
+                src.Origem.Equals("Repasse", StringComparison.OrdinalIgnoreCase)
+                    ? src.Valor
+                    : 0));
 
         
     }

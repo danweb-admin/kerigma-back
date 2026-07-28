@@ -1,4 +1,6 @@
-﻿using RccManager.Domain.Entities;
+﻿using AutoMapper;
+using RccManager.Domain.Dtos.Wallet;
+using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Interfaces.Services;
 
@@ -8,13 +10,17 @@ namespace RccManager.Service.Services
     {
         private readonly IWalletRepository walletRepository;
         private readonly IWalletMovimentoService walletMovimentoService;
+        private readonly IMapper mapper;
+
 
         public WalletService(
             IWalletRepository walletRepository,
-            IWalletMovimentoService walletMovimentoService)
+            IWalletMovimentoService walletMovimentoService,
+            IMapper mapper)
         {
             this.walletRepository = walletRepository;
             this.walletMovimentoService = walletMovimentoService;
+            this.mapper = mapper;
         }
 
         public async Task<Wallet> GetByOrganizador(Guid organizadorId)
@@ -119,6 +125,42 @@ namespace RccManager.Service.Services
                 saldoAnterior,
                 wallet.SaldoDisponivel,
                 DateTime.Now);
+        }
+
+        public async Task<WalletDtoResult> GetByEvento(Guid eventoId)
+        {
+            return mapper.Map<WalletDtoResult>(
+                await walletRepository.GetByEvento(eventoId));
+        }
+
+        public async Task<IEnumerable<WalletMovimentoDtoResult>> GetExtrato(Guid eventoId)
+        {
+            var movimentos = mapper.Map<IEnumerable<WalletMovimentoDtoResult>>(await walletRepository.GetExtrato(eventoId));
+            decimal saldo = 0;
+
+            foreach(var mov in movimentos.OrderBy(x => x.DataMovimento))
+            {
+                mov.SaldoAnterior = saldo;
+
+                saldo += mov.Entrada;
+                if (mov.Saida < 0)
+                {
+                    mov.Saida = mov.Saida * -1;
+                    saldo -= mov.Saida ;
+                }
+                
+
+                mov.SaldoAtual = saldo;
+
+                if (mov.Financeiro != null)
+                {
+                    mov.Referencia = mov.Financeiro.ReferenceId;
+                    mov.NomeParticipante = mov.Financeiro.Inscricao.Nome;
+                }
+                
+            }
+
+            return movimentos;
         }
     }
 }

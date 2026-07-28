@@ -7,5 +7,8 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<Wallet> GetByOrganizador(Guid eventoId);
         Task<bool> Exists(Guid eventoId);
         Task<Wallet> GetOrCreate(Guid eventoId);
+        Task<Wallet> GetByEvento(Guid eventoId);
+        Task<IEnumerable<WalletMovimento>> GetExtrato(Guid eventoId);
+
     }
 }

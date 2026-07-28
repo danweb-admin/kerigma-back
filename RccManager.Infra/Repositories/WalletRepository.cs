@@ -46,5 +46,22 @@ namespace RccManager.Infra.Repositories
 
             return wallet;
         }
+
+        public async Task<Wallet> GetByEvento(Guid eventoId)
+        {
+            return await dbSet
+                .FirstOrDefaultAsync(x => x.OrganizadorId == eventoId);
+        }
+
+        public async Task<IEnumerable<WalletMovimento>> GetExtrato(Guid eventoId)
+        {
+            return await context.WalletMovimentos
+                .Include(x => x.Financeiro)
+                .ThenInclude(x => x.Inscricao)
+                .Where(x => x.EventoId == eventoId && x.Tipo != "LIBERACAO_CARTAO") 
+                .OrderByDescending(x => x.DataMovimento)
+                .ToListAsync();
+
+        }
     }
 }

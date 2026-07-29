@@ -135,7 +135,8 @@ namespace RccManager.Service.Services
             var body = new
             {
                 reference_id = inscricao.CodigoInscricao,
-
+                expiration_date = DateTime.Now.AddHours(3)
+                            .ToString("yyyy-MM-ddTHH:mm:sszzz"), // formato ISO
                 customer = new
                 {
                     name = inscricao.Nome,

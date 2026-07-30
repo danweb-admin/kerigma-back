@@ -133,7 +133,7 @@ namespace RccManager.Service.Services
                 .Replace("-", "");
         
             // Define o limite de parcelas
-            int limiteParcelas = 1;
+            int limiteParcelas = evento.QtdParcelas;
         
             // Permite 2 parcelas somente se o evento permitir
             // e cada parcela for de no mínimo R$ 5,00

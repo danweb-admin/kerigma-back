@@ -121,49 +121,69 @@ namespace RccManager.Service.Services
         {
             string token = Environment.GetEnvironmentVariable("Token");
             string url = Environment.GetEnvironmentVariable("UrlPagSeguro");
-
+        
             Evento evento = await _eventoRepository.GetById(inscricao.EventoId);
-
+        
             using var http = new HttpClient();
             http.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
-
+        
             string cpfSomenteNumeros = inscricao.Cpf
                 .Replace(".", "")
                 .Replace("-", "");
-
+        
+            // Define o limite de parcelas
+            int limiteParcelas = evento.QtdParcelas;
+        
+            // Permite 2 parcelas somente se o evento permitir
+            // e cada parcela for de no mínimo R$ 5,00
+            if (evento.QtdParcelas >= 2)
+            {
+                if (inscricao.ValorInscricao / 2m >= 5m)
+                {
+                    limiteParcelas = 2;
+                }
+            }
+        
             var body = new
             {
                 reference_id = inscricao.CodigoInscricao,
-
+        
+                expiration_date = DateTime.Now
+                    .AddHours(3)
+                    .ToString("yyyy-MM-ddTHH:mm:sszzz"),
+        
                 customer = new
                 {
                     name = inscricao.Nome,
                     email = inscricao.Email,
                     tax_id = cpfSomenteNumeros
                 },
-
+        
                 items = new[]
                 {
-                    new {
+                    new
+                    {
                         reference_id = evento.Slug,
                         name = evento.Nome,
                         quantity = 1,
                         unit_amount = (int)(inscricao.ValorInscricao * 100)
                     }
                 },
-
+        
                 notification_urls = new[]
                 {
                     "https://backend.kerigma-eventos.online/api/webhook"
                 },
-
+        
                 payment_methods = new[]
                 {
-                    new {
+                    new
+                    {
                         type = "CREDIT_CARD"
                     }
                 },
+        
                 payment_methods_configs = new[]
                 {
                     new
@@ -174,34 +194,33 @@ namespace RccManager.Service.Services
                             new
                             {
                                 option = "INSTALLMENTS_LIMIT",
-                                value = $"{evento.QtdParcelas}"
+                                value = limiteParcelas.ToString()
                             }
                         }
                     }
-                },
+                }
             };
-
-            Console.WriteLine("request: " + body.ToString());
+        
             var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
             {
                 WriteIndented = true
             });
-
-            Console.WriteLine("JSON: " + json);
-
+        
+            Console.WriteLine("JSON:");
+            Console.WriteLine(json);
+        
             var response = await http.PostAsJsonAsync($"{url}/checkouts", body);
-
+        
             if (!response.IsSuccessStatusCode)
             {
                 var erro = await response.Content.ReadAsStringAsync();
                 throw new Exception(erro);
             }
-
-             Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
-
-            var result = await response.Content.ReadFromJsonAsync<PagSeguroResponse>();
-
-            return result;
+        
+            Console.WriteLine("Response:");
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+        
+            return await response.Content.ReadFromJsonAsync<PagSeguroResponse>();
         }
 
         

@@ -1,4 +1,5 @@
-﻿using RccManager.Domain.Entities;
+﻿using RccManager.Domain.Dtos.Repasse;
+using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Interfaces.Services;
 
@@ -20,26 +21,31 @@ namespace RccManager.Service.Services
             this.walletService = walletService;
         }
 
-        public async Task<Repasse> SolicitarRepasse(Guid eventoId, decimal valor)
+        public async Task<Repasse> SolicitarRepasse(RepasseDto repasse)
         {
-            var wallet = await walletRepository.GetByOrganizador(eventoId);
+            var wallet = await walletRepository.GetByOrganizador(repasse.EventoId);
 
             if (wallet == null)
                 throw new Exception("Wallet não encontrada.");
 
-            if (wallet.SaldoDisponivel < valor)
+            if (wallet.SaldoDisponivel < repasse.Valor)
                 throw new Exception("Saldo insuficiente para solicitar o repasse.");
 
-            var repasse = new Repasse
+            var repasse_ = new Repasse
             {
-                EventoId = eventoId,
+                EventoId = repasse.EventoId,
                 WalletId = wallet.Id,
-                Valor = valor,
+                Valor = repasse.Valor,
                 Status = "PENDENTE",
-                DataSolicitacao = DateTime.Now
+                DataSolicitacao = DateTime.Now,
+                NomeBeneficiario = repasse.NomeBeneficiario.ToUpper(),
+                EmailBeneficiario = repasse.EmailBeneficiario,
+                ChavePix = repasse.ChavePix,
+                TipoChavePix = repasse.TipoChavePix
+
             };
 
-            return await repasseRepository.Insert(repasse);
+            return await repasseRepository.Insert(repasse_);
         }
 
         public async Task AprovarRepasse(Guid repasseId, Guid usuarioId)
@@ -109,5 +115,6 @@ namespace RccManager.Service.Services
         {
             return await repasseRepository.GetById(id);
         }
+
     }
 }

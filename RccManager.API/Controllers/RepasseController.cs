@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RccManager.Domain.Dtos.Repasse;
 using RccManager.Domain.Interfaces.Services;
 
 namespace RccManager.Api.Controllers
 {
     //[Authorize]
-    [Route("api/repasse")]
+    [Route("api/v1/repasse")]
     [ApiController]
     public class RepasseController : ControllerBase
     {
@@ -19,12 +21,12 @@ namespace RccManager.Api.Controllers
         /// <summary>
         /// Organizador solicita um repasse
         /// </summary>
-        [HttpPost("solicitar")]
-        public async Task<IActionResult> SolicitarRepasse(Guid eventoId, decimal valor)
+        [HttpPost()]
+        public async Task<IActionResult> SolicitarRepasse([FromBody] RepasseDto repasse)
         {
             try
             {
-                var result = await repasseService.SolicitarRepasse(eventoId, valor);
+                var result = await repasseService.SolicitarRepasse(repasse);
 
                 return Ok(result);
             }
@@ -38,11 +40,13 @@ namespace RccManager.Api.Controllers
         /// Administrador aprova o repasse
         /// </summary>
         [HttpPut("{id}/aprovar")]
-        public async Task<IActionResult> Aprovar(Guid id, Guid usuarioId)
+        public async Task<IActionResult> Aprovar(Guid id)
         {
             try
             {
-                await repasseService.AprovarRepasse(id, usuarioId);
+                Guid userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+                await repasseService.AprovarRepasse(id, userId);
 
                 return Ok("Repasse aprovado com sucesso.");
             }
@@ -58,12 +62,13 @@ namespace RccManager.Api.Controllers
         [HttpPut("{id}/pagar")]
         public async Task<IActionResult> Pagar(
             Guid id,
-            Guid usuarioId,
-            [FromBody] string comprovante = null)
+            [FromBody] RepasseDto repasse)
         {
             try
             {
-                await repasseService.PagarRepasse(id, usuarioId, comprovante);
+                Guid userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+                await repasseService.PagarRepasse(id, userId, repasse.Comprovante);
 
                 return Ok("Repasse pago com sucesso.");
             }

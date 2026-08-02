@@ -1,8 +1,7 @@
 ﻿using System;
-
-namespace RccManager.Domain.Entities
+namespace RccManager.Domain.Dtos.Repasse
 {
-    public class Repasse : BaseEntity
+    public class RepasseDto
     {
         public Guid EventoId { get; set; }
         public Guid WalletId { get; set; }
@@ -13,13 +12,7 @@ namespace RccManager.Domain.Entities
         public string ChavePix { get; set; }
         public string TipoChavePix { get; set; }
         public string Observacao { get; set; }
-        public DateTime DataSolicitacao { get; set; }
-        public DateTime? DataAprovacao { get; set; }
-        public DateTime? DataPagamento { get; set; }
-        public Guid? UsuarioAprovacaoId { get; set; }
         public string Comprovante { get; set; }
-        public virtual Evento Evento { get; set; }
-        public virtual Wallet Wallet { get; set; }
-        public virtual User UsuarioAprovacao { get; set; }
     }
 }
+

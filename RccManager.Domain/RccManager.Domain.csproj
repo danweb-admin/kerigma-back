@@ -38,6 +38,7 @@
     <None Remove="Dtos\EventoUsuarios\" />
     <None Remove="Dtos\Financeiro\" />
     <None Remove="Dtos\Wallet\" />
+    <None Remove="Dtos\Repasse\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Entities\" />
@@ -65,5 +66,6 @@
     <Folder Include="Dtos\EventoUsuarios\" />
     <Folder Include="Dtos\Financeiro\" />
     <Folder Include="Dtos\Wallet\" />
+    <Folder Include="Dtos\Repasse\" />
   </ItemGroup>
 </Project>

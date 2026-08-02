@@ -333,6 +333,8 @@ namespace RccManager.Domain.Services
             {
                 item.InscricaoId = result.Id;
                 item.Id = Guid.NewGuid();
+
+                item.Valor = string.IsNullOrWhiteSpace(item.Valor) ? "." : item.Valor;
                 var camposValores = _mapper.Map<InscricaoCampoValores>(item);
                 await _inscricaoRepository.InsertCamposDinamicos(camposValores);
                 

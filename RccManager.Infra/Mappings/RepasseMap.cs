@@ -29,18 +29,6 @@ namespace RccManager.Infra.Mappings
                 .HasMaxLength(30)
                 .IsRequired();
 
-            builder.Property(x => x.Banco)
-                .HasMaxLength(100);
-
-            builder.Property(x => x.Agencia)
-                .HasMaxLength(20);
-
-            builder.Property(x => x.Conta)
-                .HasMaxLength(30);
-
-            builder.Property(x => x.TipoConta)
-                .HasMaxLength(20);
-
             builder.Property(x => x.ChavePix)
                 .HasMaxLength(200);
 
@@ -49,6 +37,12 @@ namespace RccManager.Infra.Mappings
 
             builder.Property(x => x.Observacao)
                 .HasMaxLength(500);
+
+            builder.Property(x => x.NomeBeneficiario)
+                .HasMaxLength(500);
+
+            builder.Property(x => x.EmailBeneficiario)
+                .HasMaxLength(150);
 
             builder.Property(x => x.Comprovante)
                 .HasMaxLength(500);

@@ -1,10 +1,11 @@
-﻿using RccManager.Domain.Entities;
+﻿using RccManager.Domain.Dtos.Repasse;
+using RccManager.Domain.Entities;
 
 namespace RccManager.Domain.Interfaces.Services
 {
     public interface IRepasseService
     {
-        Task<Repasse> SolicitarRepasse(Guid eventoId, decimal valor);
+        Task<Repasse> SolicitarRepasse(RepasseDto repasse);
 
         Task AprovarRepasse(Guid repasseId, Guid usuarioId);
 

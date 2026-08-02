@@ -10,17 +10,20 @@ namespace RccManager.Service.Services
     {
         private readonly IWalletRepository walletRepository;
         private readonly IWalletMovimentoService walletMovimentoService;
+        private readonly IRepasseRepository repasseRepository; 
         private readonly IMapper mapper;
 
 
         public WalletService(
             IWalletRepository walletRepository,
             IWalletMovimentoService walletMovimentoService,
-            IMapper mapper)
+            IMapper mapper,
+            IRepasseRepository repasseRepository)
         {
             this.walletRepository = walletRepository;
             this.walletMovimentoService = walletMovimentoService;
             this.mapper = mapper;
+            this.repasseRepository = repasseRepository;
         }
 
         public async Task<Wallet> GetByOrganizador(Guid organizadorId)
@@ -157,6 +160,18 @@ namespace RccManager.Service.Services
                     mov.Referencia = mov.Financeiro.ReferenceId;
                     mov.NomeParticipante = mov.Financeiro.Inscricao.Nome;
                 }
+
+                if (mov.Origem == "REPASSE")
+                {
+                    var repasses = await repasseRepository.GetByEvento(eventoId);
+                    var repasse = repasses.FirstOrDefault(x => x.Valor == mov.Saida);
+
+                    if (repasse != null)
+                    {
+                        mov.Comprovante = repasse.Comprovante;
+                    }
+                }
+                
                 
             }
 

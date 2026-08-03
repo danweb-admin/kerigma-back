@@ -736,12 +736,17 @@ namespace RccManager.Domain.Services
 
         private void CalculaValorLiquidoPagSeguro(ref Inscricao inscricao, ChargeWebhook charge)
         {
-            decimal taxaServico = 0;
+            try
+            {
+                Console.WriteLine($"TAXA SERVICO:::: {inscricao.Evento.TaxaServico}");
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine($"errooooo TAXA SERVICO:::: ");
+            }
+            
 
-            var evento = _eventoRepository.GetById(inscricao.EventoId).GetAwaiter().GetResult();
-
-            if (evento == null)
-                decimal.TryParse(Environment.GetEnvironmentVariable("TaxaServico"), out taxaServico);
+            decimal.TryParse(Environment.GetEnvironmentVariable("TaxaServico"), out decimal taxaServico);
 
             decimal percentual = ObterPercentualTaxa(inscricao, charge);
 

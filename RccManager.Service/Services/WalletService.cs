@@ -161,16 +161,16 @@ namespace RccManager.Service.Services
                     mov.NomeParticipante = mov.Financeiro.Inscricao.Nome;
                 }
 
-                if (mov.Origem == "REPASSE")
-                {
-                    var repasses = await repasseRepository.GetByEvento(eventoId);
-                    var repasse = repasses.FirstOrDefault(x => x.Valor == mov.Saida);
+                //if (mov.Origem == "REPASSE")
+                //{
+                   // var repasses = await repasseRepository.GetByEvento(eventoId);
+                   // var repasse = repasses.FirstOrDefault(x => x.Valor == mov.Saida);
 
-                    if (repasse != null)
-                    {
-                        mov.Comprovante = repasse.Comprovante;
-                    }
-                }
+                    //if (repasse != null)
+                    //{
+                        //mov.Comprovante = repasse.Comprovante;
+                    //}
+                //}
                 
                 
             }

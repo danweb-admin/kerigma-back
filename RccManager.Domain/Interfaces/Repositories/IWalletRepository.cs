@@ -1,4 +1,5 @@
-﻿using RccManager.Domain.Entities;
+﻿using RccManager.Domain.Dtos.Wallet;
+using RccManager.Domain.Entities;
 
 namespace RccManager.Domain.Interfaces.Repositories
 {
@@ -8,7 +9,7 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<bool> Exists(Guid eventoId);
         Task<Wallet> GetOrCreate(Guid eventoId);
         Task<Wallet> GetByEvento(Guid eventoId);
-        Task<IEnumerable<WalletMovimento>> GetExtrato(Guid eventoId);
+        Task<List<WalletMovimentoDtoResult>> GetExtrato(Guid eventoId);
 
     }
 }

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RccManager.Domain.Dtos.Evento;
+using RccManager.Domain.Dtos.Users;
 using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Domain.Interfaces.Services;
@@ -42,11 +43,12 @@ namespace RccManager.Domain.Services
         private readonly WhatsAppProducer _whatsAppProducer;
         private readonly IFinanceiroService _financeiroService;
         private readonly IWalletService _walletService;
-
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IMD5Service _mD5Service;
 
 
-        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer, IFinanceiroService financeiroService, IWalletService walletService)
+        public EventoService(IEventoRepository eventoRepository, IInscricaoRepository inscricaoRepository, IGrupoOracaoRepository grupoOracaoRepository, IDecanatoSetorRepository decanatoRepository, IPagSeguroService pagSeguroService, EmailQueueProducer producer, IMapper mapper, IPagamentoAsaasService pagamentoAsaasService, IHubContext<CheckinHub> hub, IEventoUsuariosRepository eventoUsuariosRepository, IEmailService emailService, IServoRepository servoRepository, WhatsAppProducer whatsAppProducer, IFinanceiroService financeiroService, IWalletService walletService, IUserRepository userRepository, IMD5Service mD5Service)
         {
             _eventoRepository = eventoRepository;
             _inscricaoRepository = inscricaoRepository;
@@ -63,6 +65,8 @@ namespace RccManager.Domain.Services
             _whatsAppProducer = whatsAppProducer;
             _financeiroService = financeiroService;
             _walletService = walletService;
+            _userRepository = userRepository;
+            _mD5Service = mD5Service;
         }
 
         public async Task<HttpResponse> Create(EventoDto dto, Guid userId)
@@ -107,12 +111,29 @@ namespace RccManager.Domain.Services
                 if (result == null)
                     return new HttpResponse { Message = "Houve um problema para adicionar o evento", StatusCode = (int)HttpStatusCode.BadRequest };
 
+                var temUsuario = await _userRepository.GetByEmail(evento.OrganizadorEmail);
+
+                if (temUsuario == null)
+                {
+                    var _user = new User
+                    {
+                        Active = true,
+                        Email = evento.OrganizadorEmail,
+                        Name = evento.OrganizadorNome,
+                        Password =  _mD5Service.ReturnMD5(dto.OrganizadorSenha)
+                    };
+
+                    var res = await _userRepository.Insert(_user);
+
+                    temUsuario = res;
+                }
+
                 var eventoUsuario = new EventoUsuarios
                 {
                     Active = true,
                     CreatedAt = DateTime.Now,
                     EventoId = result.Id,
-                    UserId = userId
+                    UserId = temUsuario.Id
                 };
                 var result1 = await _eventoUsuariosRepository.Insert(eventoUsuario);
             }

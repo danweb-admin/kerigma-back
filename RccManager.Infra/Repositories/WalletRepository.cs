@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RccManager.Domain.Dtos.Wallet;
 using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;
 using RccManager.Infra.Context;
@@ -53,15 +54,40 @@ namespace RccManager.Infra.Repositories
                 .FirstOrDefaultAsync(x => x.OrganizadorId == eventoId);
         }
 
-        public async Task<IEnumerable<WalletMovimento>> GetExtrato(Guid eventoId)
+        public async Task<List<WalletMovimentoDtoResult>> GetExtrato(Guid eventoId)
         {
             return await context.WalletMovimentos
-                .Include(x => x.Financeiro)
-                .ThenInclude(x => x.Inscricao)
-                .Where(x => x.EventoId == eventoId && x.Tipo != "LIBERACAO_CARTAO") 
-                .OrderByDescending(x => x.DataMovimento)
-                .ToListAsync();
+                .AsNoTracking()
+                .Where(x => x.EventoId == eventoId &&
+                            x.Tipo != "LIBERACAO_CARTAO")
+                .OrderBy(x => x.DataMovimento)
+                .Select(x => new WalletMovimentoDtoResult
+                {
+                    Id = x.Id,
+                    WalletId = x.WalletId,
+                    FinanceiroId = x.FinanceiroId,
+                    RepasseId = x.RepasseId,
+                    DataMovimento = x.DataMovimento,
+                    Tipo = x.Tipo,
+                    Descricao = x.Descricao,
+                    Origem = x.Origem,
 
+                    Entrada = x.Valor > 0 ? x.Valor : 0,
+                    Saida = x.Valor < 0 ? -x.Valor : 0,
+
+                    Referencia = x.Financeiro != null
+                        ? x.Financeiro.ReferenceId
+                        : null,
+
+                    NomeParticipante = x.Financeiro != null
+                        ? x.Financeiro.Inscricao.Nome
+                        : null,
+
+                    Comprovante = x.Repasse != null
+                        ? x.Repasse.Comprovante
+                        : null
+                })
+                .ToListAsync();
         }
     }
 }

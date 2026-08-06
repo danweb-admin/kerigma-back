@@ -27,6 +27,7 @@ namespace RccManager.Domain.Dtos.Evento
         public int? LimiteParticipantes { get; set; }
         public decimal? TaxaServico { get; set; }
         public bool EventoGratuito { get; set; }
+        public string OrganizadorSenha { get; set; }
 
 
         // 🔗 Relações

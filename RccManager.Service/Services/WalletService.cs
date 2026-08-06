@@ -136,43 +136,33 @@ namespace RccManager.Service.Services
                 await walletRepository.GetByEvento(eventoId));
         }
 
-        public async Task<IEnumerable<WalletMovimentoDtoResult>> GetExtrato(Guid eventoId)
+       public async Task<IEnumerable<WalletMovimentoDtoResult>> GetExtrato(Guid eventoId)
         {
-            var movimentos = mapper.Map<IEnumerable<WalletMovimentoDtoResult>>(await walletRepository.GetExtrato(eventoId));
+            var movimentos = await walletRepository.GetExtrato(eventoId);
+
             decimal saldo = 0;
 
-            foreach(var mov in movimentos.OrderBy(x => x.DataMovimento))
+            foreach (var mov in movimentos)
             {
                 mov.SaldoAnterior = saldo;
 
                 saldo += mov.Entrada;
+
                 if (mov.Saida < 0)
                 {
-                    mov.Saida = mov.Saida * -1;
-                    saldo -= mov.Saida ;
+                    mov.Saida *= -1;
+                    saldo -= mov.Saida;
                 }
-                
 
                 mov.SaldoAtual = saldo;
 
                 if (mov.Financeiro != null)
                 {
                     mov.Referencia = mov.Financeiro.ReferenceId;
-                    mov.NomeParticipante = mov.Financeiro.Inscricao.Nome;
+                    mov.NomeParticipante = mov.Financeiro.Inscricao?.Nome;
                 }
 
-                if (mov.Origem == "REPASSE")
-                {
-                    var repasses = await repasseRepository.GetByEvento(eventoId);
-                    var repasse = repasses.FirstOrDefault(x => x.Valor == mov.Saida);
-
-                    if (repasse != null)
-                    {
-                        mov.Comprovante = repasse.Comprovante;
-                    }
-                }
-                
-                
+                mov.Comprovante = mov.Repasse?.Comprovante;
             }
 
             return movimentos;

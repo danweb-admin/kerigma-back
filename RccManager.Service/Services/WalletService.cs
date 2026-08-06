@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using RccManager.Domain.Dtos.Wallet;
 using RccManager.Domain.Entities;
 using RccManager.Domain.Interfaces.Repositories;

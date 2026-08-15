@@ -37,12 +37,9 @@ namespace RccManager.Service.Services
             var payload = new
             {
                 number = m.Telefone,
-                mediaMessage = new
-                {
-                    mediatype = "image",
-                    media = urlQrCode,
-                    caption = "Seu QR Code para check-in 🎟️\nApresente na entrada do evento."
-                }
+                mediatype = "image",
+                media = urlQrCode,
+                caption = "Seu QR Code para check-in 🎟️\nApresente na entrada do evento."
             };
 
             await PostAsync("/message/sendMedia/danweb", payload);

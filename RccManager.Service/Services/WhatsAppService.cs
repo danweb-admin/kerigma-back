@@ -24,10 +24,7 @@ namespace RccManager.Service.Services
             var payload = new
             {
                 number = m.Telefone,
-                textMessage = new
-                {
-                    text = mensagem
-                }
+                text = mensagem
             };
 
             await PostAsync("/message/sendText/danweb", payload);

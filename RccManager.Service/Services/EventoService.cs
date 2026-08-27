@@ -646,6 +646,9 @@ namespace RccManager.Domain.Services
                 if (charge.Status != "PAID")
                     return new ValidationResult("❌ Erro no processamento do pagamento.");
 
+                if (charge.Status == "DECLINED")
+                    return new ValidationResult("❌ Erro no processamento do pagamento.");
+
                 // Atualizar status para pago
                 inscricao.Status = "pagamento_confirmado";
                 inscricao.DataPagamento = charge.Paid_At ?? DateTime.Now;

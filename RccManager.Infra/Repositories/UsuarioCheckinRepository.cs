@@ -16,10 +16,17 @@ namespace RccManager.Infra.Repositories
             dbSet = _context.Set<UsuariosCheckin>();
         }
 
-        public new async Task<IEnumerable<UsuariosCheckin>> GetAll(string email)
+        public new async Task<IEnumerable<UsuariosCheckin>> GetAll(string email, Guid userId)
         {
+            var eventos = context.EventoUsuarios
+                           .Where(x => x.UserId == userId)
+                           .Select(x => x.EventoId).ToList();
+
             if (string.IsNullOrEmpty(email))
-                return await dbSet.Include(x => x.Evento).ToListAsync();
+                return await dbSet.AsNoTracking()
+                    .Include(x => x.Evento)
+                    .Where(x => eventos.Contains(x.EventoId))
+                    .ToListAsync();
 
             return await dbSet.Where(x => x.Email == email).ToListAsync();
         }

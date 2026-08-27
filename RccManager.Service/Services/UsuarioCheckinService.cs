@@ -43,9 +43,9 @@ namespace RccManager.Service.Services
             return new HttpResponse { Message = "Objeto criado com sucesso.", StatusCode = (int)HttpStatusCode.OK };
         }
 
-        public async Task<IEnumerable<UsuarioCheckinDtoResult>> GetAll(string email)
+        public async Task<IEnumerable<UsuarioCheckinDtoResult>> GetAll(string email, Guid userId)
         {
-            return _mapper.Map<IEnumerable<UsuarioCheckinDtoResult>>(await _repository.GetAll(email));
+            return _mapper.Map<IEnumerable<UsuarioCheckinDtoResult>>(await _repository.GetAll(email,userId));
             
 
         }

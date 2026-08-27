@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using RccManager.Domain.Dtos.Servo;
 using RccManager.Domain.Dtos.Users;
@@ -27,7 +28,9 @@ namespace RccManager.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string email)
         {
-            var usuarios = await _service.GetAll(email);
+            Guid userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var usuarios = await _service.GetAll(email, userId);
             return Ok(usuarios);
         }
 

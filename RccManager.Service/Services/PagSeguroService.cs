@@ -95,7 +95,12 @@ namespace RccManager.Service.Services
             var response = await http.PostAsJsonAsync($"{url}/orders", body);
 
             if (!response.IsSuccessStatusCode)
-                Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
+            {
+               Console.WriteLine("Error: response: " + await response.Content.ReadAsStringAsync());
+
+                throw new WebException("Verifique o CPF");
+
+            }
 
             Console.WriteLine("response: " + await response.Content.ReadAsStringAsync());
 
@@ -214,7 +219,8 @@ namespace RccManager.Service.Services
             if (!response.IsSuccessStatusCode)
             {
                 var erro = await response.Content.ReadAsStringAsync();
-                throw new Exception(erro);
+
+                throw new WebException("Verifique o CPF");
             }
         
             Console.WriteLine("Response:");

@@ -142,13 +142,13 @@ namespace RccManager.Service.Services
         
             // Permite 2 parcelas somente se o evento permitir
             // e cada parcela for de no mínimo R$ 5,00
-            if (evento.QtdParcelas >= 2)
-            {
-                if (inscricao.ValorInscricao / 2m >= 5m)
-                {
-                    limiteParcelas = 2;
-                }
-            }
+            //if (evento.QtdParcelas >= 2)
+            //{
+            //    if (inscricao.ValorInscricao / 2m >= 5m)
+            //    {
+            //        limiteParcelas = 2;
+            //    }
+            //}
         
             var body = new
             {

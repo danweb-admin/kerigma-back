@@ -31,6 +31,7 @@ namespace RccManager.Domain.Interfaces.Services
         Task<ValidationResult> EventosWebhook(string response);
         Task<DataTable> ExportarInscricoes(Guid eventoId);
         Task VerificaInscricoesPendentes();
+        Task<InscricaoDto> ConsultaInscricao(Guid eventoId, string cpf);
         byte[] GerarExcel(DataTable DataTable);
         Task MigrarInscricoes();
         Task LiberarSaldo();

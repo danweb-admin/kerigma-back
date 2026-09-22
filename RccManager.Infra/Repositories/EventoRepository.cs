@@ -42,7 +42,7 @@ namespace RccManager.Infra.Repositories
                 .Include(x => x.LotesInscricoes)
                 .Include(x => x.Programacao)
                 .Include(x => x.Participacoes)
-                .Include(x => x.Participacoes)
+                .Where(x => x.Active)
                 .OrderBy(x => x.Nome)
                 .ToListAsync();
             }
@@ -54,7 +54,6 @@ namespace RccManager.Infra.Repositories
                 .Include(x => x.InformacoesAdicionais)
                 .Include(x => x.LotesInscricoes)
                 .Include(x => x.Programacao)
-                .Include(x => x.Participacoes)
                 .Include(x => x.Participacoes)
                 .OrderBy(x => x.Nome)
                 .Where(x => x.EventoUsuarios.Any(eu => eu.UserId == userId && eu.Active))
@@ -199,5 +198,7 @@ namespace RccManager.Infra.Repositories
 
             return dt;
         }
+
+        
     }
 }

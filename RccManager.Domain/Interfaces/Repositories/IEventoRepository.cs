@@ -20,5 +20,7 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task<IEnumerable<EventoCampos>> GetCamposByEvento(Guid eventoId);
         Task<int> GetLimiteParticipantes(Guid eventoId);
         Task<DataTable> ExportarInscricoes(Guid eventoId);
+
+
     }
 }

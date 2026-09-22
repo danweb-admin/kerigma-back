@@ -14,6 +14,7 @@ namespace RccManager.Domain.Interfaces.Repositories
         Task InsertCamposDinamicos(InscricaoCampoValores camposDinamicos);
         Task<IEnumerable<Inscricao>> GetAllPending(DateTime dataBase);
         Task<IEnumerable<Inscricao>> GetPagasSemFinanceiro();
+        Task<Inscricao> ConsultaInscricao(Guid eventoId, string cpf);
 
     }
 }

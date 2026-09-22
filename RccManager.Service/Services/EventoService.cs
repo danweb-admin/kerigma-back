@@ -752,6 +752,13 @@ namespace RccManager.Domain.Services
             
         }
 
+        public async Task<InscricaoDto> ConsultaInscricao(Guid eventoId, string cpf)
+        {
+            var inscricao = await _inscricaoRepository.ConsultaInscricao(eventoId,cpf);
+
+            return _mapper.Map<InscricaoDto>(inscricao);
+        }
+
         private bool EmailValido(string email)
         {
             string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";

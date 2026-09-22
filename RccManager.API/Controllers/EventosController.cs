@@ -213,6 +213,7 @@ namespace RccManager.API.Controllers
         }
 
         [HttpGet("reenvio-comprovante")]
+        [AllowAnonymous]
         public async Task<IActionResult> InscricaoReenvioComprovante([FromQuery] string codigoInscricao, string email)
         {
             try
@@ -451,6 +452,41 @@ namespace RccManager.API.Controllers
                 return BadRequest(new Models.ValidationResult { Code = "400", Message = ex.Message, PropertyName = ex.Source });
             }
         }
+
+        [HttpGet("consulta-inscricao")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConsultarInscricao(Guid eventoId, string cpf)
+        {
+            if (eventoId == Guid.Empty)
+                return BadRequest(new
+                {
+                    message = "Evento inválido."
+                });
+
+            if (string.IsNullOrWhiteSpace(cpf))
+                return BadRequest(new {message = "CPF é obrigatório."});
+
+            var cpfLimpo = new string(cpf.Where(char.IsDigit).ToArray());
+
+            if (cpfLimpo.Length != 11)
+                return BadRequest(new { message = "CPF inválido." });
+
+            var inscricao = await _eventoService.ConsultaInscricao(eventoId,cpf);
+
+            if (inscricao == null)
+            {
+                return NotFound(new
+                {
+                    message = "Nenhuma inscrição encontrada para este CPF neste evento."
+                });
+            }
+                
+
+            return Ok(inscricao);
+        }
+
+
+
         
     }
 }

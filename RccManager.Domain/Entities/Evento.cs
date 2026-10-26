@@ -26,6 +26,10 @@ namespace RccManager.Domain.Entities
         public int LimiteParticipantes { get; set; }
         public decimal TaxaServico { get; set; }
         public bool EventoGratuito { get; set; }
+        public decimal PorcPix { get; set; }
+        public decimal PorcCartao { get; set; }
+        public bool Porcentagem { get; set; }
+
 
         public virtual Local Local { get; set; }
         public virtual Sobre Sobre { get; set; }

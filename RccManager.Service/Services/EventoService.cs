@@ -564,7 +564,8 @@ namespace RccManager.Domain.Services
                 foreach (var item in pendentes)
                 {
                     Console.WriteLine($"Inscricao: {item.CodigoInscricao}, Nome: {item.Nome}, Email: {item.Email}, Valor: {item.ValorInscricao}");
-                    await _inscricaoRepository.Delete(item.Id);
+                    item.Status = "pagamento_expirado";
+                    await _inscricaoRepository.Update(item);
                 }
                 
                 
@@ -595,6 +596,7 @@ namespace RccManager.Domain.Services
                 var split = webhookResponse.payment.description.Split("|");
 
                 var codigoInscricao = split[0].Trim();
+
 
                 inscricao = await _inscricaoRepository.GetByCodigo(codigoInscricao);
 
@@ -631,15 +633,15 @@ namespace RccManager.Domain.Services
                 webhookPagSeguro = JsonConvert.DeserializeObject<PagSeguroWebhook>(response);
 
                 string codigoInscricao = webhookPagSeguro.Reference_Id;
-
+                
                 inscricao = await _inscricaoRepository.GetByCodigo(codigoInscricao);
 
                 if (inscricao == null)
                     return new ValidationResult("❌ Erro no processamento do webhook.");
 
                 // Se já estava paga, ignore
-                if (inscricao.Status == "pagamento_confirmado")
-                    return ValidationResult.Success;
+                //if (inscricao.Status == "pagamento_confirmado")
+                //    return ValidationResult.Success;
 
                 var charge = webhookPagSeguro.Charges.First();
 
@@ -775,6 +777,8 @@ namespace RccManager.Domain.Services
                 decimal.TryParse(Environment.GetEnvironmentVariable("TaxaServico"), out taxaServico);
             else
                 taxaServico = inscricao.Evento.TaxaServico;
+
+  
 
             decimal percentual = ObterPercentualTaxa(inscricao, charge);
 

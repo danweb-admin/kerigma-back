@@ -27,7 +27,6 @@ public class GrupoOracaoController : ControllerBase
     }
 
     [HttpGet("get-all")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         var grupoOracoes = await _grupoOracaoService.GetAll();

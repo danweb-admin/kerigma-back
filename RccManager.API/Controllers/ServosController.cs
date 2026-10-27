@@ -39,7 +39,6 @@ namespace RccManager.API.Controllers
         }
 
         [HttpGet("by-cpf")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetByCPF([FromQuery] string cpf)
         {
             Console.WriteLine($"📄 CPF: {cpf}" );
@@ -76,7 +75,6 @@ namespace RccManager.API.Controllers
         }
 
         [HttpPost("servos-google-forms")]
-        [AllowAnonymous]
         public async Task<IActionResult> PostForms([FromBody] ServoFormsDto servoViewModel)
         {
 

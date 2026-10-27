@@ -190,9 +190,12 @@ builder.Services.AddScoped<IPagamentoAsaasService, PagamentoAsaasService>();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "RccManager.API v1"));
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "RccManager.API v1"));
+}
 
 app.UseHttpsRedirection();
 

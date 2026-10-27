@@ -13,7 +13,7 @@ namespace RccManager.API.Controllers
 {
     [ApiController]
     [Route("api/v1/servos")]
-    //[Authorize]
+    [Authorize]
     public class ServosController : ControllerBase
     {
         private readonly IServoService _servoService;

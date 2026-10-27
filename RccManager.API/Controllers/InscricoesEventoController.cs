@@ -11,7 +11,7 @@ namespace RccManager.API.Controllers
 {
     [ApiController]
     [Route("api/v1/inscricoes-evento")]
-    //[Authorize]
+    [Authorize]
     public class InscricoesEventoController : ControllerBase
     {
         private readonly IInscricoesEventoService _inscricaoService;

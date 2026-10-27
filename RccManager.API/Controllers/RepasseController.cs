@@ -6,7 +6,7 @@ using RccManager.Domain.Interfaces.Services;
 
 namespace RccManager.Api.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/v1/repasse")]
     [ApiController]
     public class RepasseController : ControllerBase

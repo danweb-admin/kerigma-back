@@ -5,7 +5,7 @@ using RccManager.Domain.Interfaces.Services;
 
 namespace RccManager.API.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/v1/wallet")]
     [ApiController]
     public class WalletController : ControllerBase

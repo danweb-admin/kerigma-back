@@ -242,6 +242,8 @@ namespace RccManager.API.Controllers
             {
                 var inscricao_ = await _eventoService.VerificaStatus(codigoInscricao);
 
+                Console.WriteLine($"Inscricao: {codigoInscricao}");
+
                 return Ok(new {
                     status = inscricao_
                 });

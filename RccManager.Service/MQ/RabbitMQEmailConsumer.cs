@@ -188,6 +188,8 @@ namespace RccManager.Service.MQ
                     Timeout = 30000 // 30 segundos
                 };
 
+                
+
                 var message = new MailMessage
                 {
                     From = new MailAddress(senderEmail,"Kerigma Eventos - Eventos"),
@@ -197,6 +199,11 @@ namespace RccManager.Service.MQ
                 };
 
                 message.To.Add(inscricao.Email);
+
+                if (inscricao.NomeEvento.Contains("Camiseta - V Deserto"))
+                {
+                    message.Bcc.Add("mayaraboiago@gmail.com"); 
+                }
 
                 await smtp.SendMailAsync(message);
                 
